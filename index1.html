@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JacobLoveis - Course Management Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4285F4;
+            --primary-hover: #3367D6;
+            --success-color: #34A853;
+            --warning-color: #FBBC04;
+            --danger-color: #EA4335;
+            --dark-color: #202124;
+            --light-gray: #F8F9FA;
+            --border-color: #E8EAED;
+            --text-primary: #202124;
+            --text-secondary: #5F6368;
+            --sidebar-width: 280px;
+            --border-radius: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--light-gray);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid var(--border-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .sidebar-menu {
+            padding: 1rem 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .menu-item:hover {
+            background-color: #F1F3F4;
+            color: var(--text-primary);
+        }
+
+        .menu-item.active {
+            background-color: #E8F0FE;
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        .menu-item i {
+            width: 20px;
+            margin-right: 0.75rem;
+            font-size: 1rem;
+        }
+
+        .menu-badge {
+            background: var(--primary-color);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 12px;
+            margin-left: auto;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .top-navbar {
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .breadcrumb-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .breadcrumb-nav a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn-save-draft {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .btn-publish {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .btn-publish:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Content Area */
+        .content-area {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Progress Steps */
+        .progress-container {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            margin: 2rem 0;
+        }
+
+        .progress-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--border-color);
+            z-index: 1;
+            transform: translateY(-50%);
+        }
+
+        .progress-line-active {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            height: 2px;
+            background: var(--primary-color);
+            z-index: 2;
+            transform: translateY(-50%);
+            transition: width 0.3s ease;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 3;
+            background: var(--light-gray);
+            padding: 0.5rem;
+            border-radius: var(--border-radius);
+        }
+
+        .step-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            margin-bottom: 0.5rem;
+        }
+
+        .step.active .step-circle {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .step.completed .step-circle {
+            background: var(--success-color);
+            border-color: var(--success-color);
+            color: white;
+        }
+
+        .step.completed .step-circle::before {
+            content: '✓';
+            font-size: 0.75rem;
+        }
+
+        .step-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .step.active .step-label {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        /* Form Sections */
+        .form-container {
+            background: white;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .form-section {
+            display: none;
+            padding: 2rem;
+        }
+
+        .form-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .section-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            display: block;
+            font-size: 0.875rem;
+        }
+
+        .form-control, .form-select {
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 0.75rem;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+            outline: none;
+        }
+
+        /* Language Tabs */
+        .language-tabs {
+            display: flex;
+            gap: 0.25rem;
+            margin-bottom: 0.75rem;
+            background: var(--light-gray);
+            padding: 0.25rem;
+            border-radius: var(--border-radius);
+        }
+
+        .lang-tab {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: none;
+            border-radius: calc(var(--border-radius) - 2px);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+            font-weight: 500;
+            flex: 1;
+            text-align: center;
+        }
+
+        .lang-tab.active {
+            background: white;
+            color: var(--primary-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* File Upload */
+        .file-upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            background: #FAFBFC;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .file-upload-area:hover {
+            border-color: var(--primary-color);
+            background: #F8F9FF;
+        }
+
+        .file-upload-icon {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        /* Lesson Management */
+        .lesson-item {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .lesson-header {
+            padding: 1rem 1.5rem;
+            background: #FAFBFC;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .lesson-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .lesson-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .lesson-content {
+            padding: 1.5rem;
+        }
+
+        /* Tags */
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .tag {
+            background: #E8F0FE;
+            color: var(--primary-color);
+            padding: 0.25rem 0.75rem;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            opacity: 0.7;
+            font-size: 0.625rem;
+        }
+
+        .tag-remove:hover {
+            opacity: 1;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-outline-primary {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            border: none;
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+            border: none;
+            color: var(--text-primary);
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            border: none;
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        /* Navigation Buttons */
+        .wizard-navigation {
+            display: flex;
+            justify-content: space-between;
+            padding: 1.5rem 2rem;
+            background: #FAFBFC;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Course Preview */
+        .course-preview {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+        }
+
+        .preview-thumbnail {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+        }
+
+        .preview-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .preview-price {
+            color: var(--success-color);
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 100%;
+                max-width: 320px;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-area {
+                padding: 1rem;
+            }
+
+            .progress-steps {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .progress-line,
+            .progress-line-active {
+                display: none;
+            }
+
+            .step {
+                flex-direction: row;
+                gap: 0.75rem;
+                width: 100%;
+                justify-content: flex-start;
+                padding: 1rem;
+            }
+
+            .step-circle {
+                margin-bottom: 0;
+            }
+
+            .step-label {
+                white-space: normal;
+                text-align: left;
+            }
+
+            .wizard-navigation {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .language-tabs {
+                flex-direction: column;
+            }
+
+            .lang-tab {
+                flex: none;
+            }
+        }
+
+        /* Sidebar overlay for mobile */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Rich Text Editor */
+        .ql-toolbar {
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+        }
+
+        .ql-container {
+            border: 1px solid var(--border-color);
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <div class="logo-text">Jacob Loveis</div>
+        </div>
+        <nav class="sidebar-menu">
+            <a href="#" class="menu-item" onclick="showSection('dashboard')">
+                <i class="fas fa-th-large"></i> Dashboard
+                <span class="menu-badge">3</span>
+            </a>
+            <a href="#" class="menu-item active" onclick="showSection('courses')">
+                <i class="fas fa-book-open"></i> Courses
+            </a>
+            <a href="#" class="menu-item" onclick="showSection('students')">
+                <i class="fas fa-users"></i> Student Courses
+            </a>
+            <a href="#" class="menu-item" onclick="showSection('instructors')">
+                <i class="fas fa-chalkboard-teacher"></i> Instructors
+            </a>
+            <a href="#" class="menu-item" onclick="showSection('analytics')">
+                <i class="fas fa-chart-line"></i> Analytics
+            </a>
+            <a href="#" class="menu-item" onclick="showSection('content')">
+                <i class="fas fa-folder-open"></i> Content Library
+            </a>
+            <a href="#" class="menu-item" onclick="showSection('settings')">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navbar -->
+        <nav class="top-navbar">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-link d-md-none me-3" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="breadcrumb-nav">
+                    <a href="#">Home</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <span>Create Account</span>
+                </div>
+            </div>
+            <div class="navbar-actions">
+                <button class="btn btn-save-draft" onclick="saveAsDraft()">Save As Draft</button>
+                <button class="btn btn-publish" onclick="publishCourseFromTop()">Publish Course</button>
+            </div>
+        </nav>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Progress Container -->
+            <div class="progress-container">
+                <div class="progress-steps">
+                    <div class="progress-line"></div>
+                    <div class="progress-line-active" id="progress-line-active" style="width: 20%;"></div>
+                    
+                    <div class="step active" data-step="1">
+                        <div class="step-circle">1</div>
+                        <div class="step-label">Course Details</div>
+                    </div>
+                    
+                    <div class="step" data-step="2">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">Upload Videos</div>
+                    </div>
+                    
+                    <div class="step" data-step="3">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">About Course</div>
+                    </div>
+                    
+                    <div class="step" data-step="4">
+                        <div class="step-circle">4</div>
+                        <div class="step-label">Sample Reviews</div>
+                    </div>
+                    
+                    <div class="step" data-step="5">
+                        <div class="step-circle">5</div>
+                        <div class="step-label">Publish Course</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Container -->
+            <div class="form-container">
+                <!-- Step 1: Course Details -->
+                <div class="form-section active" id="step-1">
+                    <h2 class="section-title">Course Details</h2>
+                    <p class="section-subtitle">Enter the basic information about your course</p>
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label class="form-label">Course Title</label>
+                                <div class="language-tabs">
+                                    <button class="lang-tab active" data-lang="en">English</button>
+                                    <button class="lang-tab" data-lang="zh-CN">简体中文</button>
+                                    <button class="lang-tab" data-lang="zh-TW">繁體中文</button>
+                                </div>
+                                <input type="text" class="form-control" id="title-en" placeholder="Enter course title in English">
+                                <input type="text" class="form-control" id="title-zh-CN" placeholder="输入中文课程标题" style="display: none;">
+                                <input type="text" class="form-control" id="title-zh-TW" placeholder="輸入中文課程標題" style="display: none;">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Course Subtitle</label>
+                                <div class="language-tabs">
+                                    <button class="lang-tab active" data-lang="en">English</button>
+                                    <button class="lang-tab" data-lang="zh-CN">简体中文</button>
+                                    <button class="lang-tab" data-lang="zh-TW">繁體中文</button>
+                                </div>
+                                <textarea class="form-control" id="subtitle-en" rows="3" placeholder="Brief description of your course"></textarea>
+                                <textarea class="form-control" id="subtitle-zh-CN" rows="3" placeholder="课程简短描述" style="display: none;"></textarea>
+                                <textarea class="form-control" id="subtitle-zh-TW" rows="3" placeholder="課程簡短描述" style="display: none;"></textarea>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Course Price ($)</label>
+                                        <input type="number" class="form-control" id="price" placeholder="0.00" min="0" step="0.01">
+                                    </div>
+                                </div>
+                             
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Course Thumbnail</label>
+                                <div class="file-upload-area" onclick="document.getElementById('thumbnail-upload').click()">
+                                    <div class="file-upload-icon">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                    </div>
+                                    <p class="mb-1">Click to upload thumbnail</p>
+                                    <small class="text-muted">JPG, PNG up to 5MB</small>
+                                </div>
+                                <input type="file" id="thumbnail-upload" accept="image/*" style="display: none;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Upload Videos -->
+                <div class="form-section" id="step-2">
+                    <h2 class="section-title">Upload Videos</h2>
+                    <p class="section-subtitle">Add video content and lessons to your course</p>
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h5>Course Lessons</h5>
+                            <p class="text-muted mb-0">Manage your course lessons and video content</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="addLesson()">
+                            <i class="fas fa-plus me-2"></i>Add Lesson
+                        </button>
+                    </div>
+
+                    <div id="lessons-container">
+                        <!-- Lessons will be dynamically added here -->
+                    </div>
+                </div>
+
+                <!-- Step 3: About Course -->
+                <div class="form-section" id="step-3">
+                    <h2 class="section-title">About Course</h2>
+                    <p class="section-subtitle">Provide detailed information about your course</p>
+
+                    <div class="form-group">
+                        <label class="form-label">Course Description</label>
+                        <div class="language-tabs">
+                            <button class="lang-tab active" data-lang="en">English</button>
+                            <button class="lang-tab" data-lang="zh-CN">简体中文</button>
+                            <button class="lang-tab" data-lang="zh-TW">繁體中文</button>
+                        </div>
+                        <div id="description-editor-en"></div>
+                        <div id="description-editor-zh-CN" style="display: none;"></div>
+                        <div id="description-editor-zh-TW" style="display: none;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Learning Objectives</label>
+                        <div class="language-tabs">
+                            <button class="lang-tab active" data-lang="en">English</button>
+                            <button class="lang-tab" data-lang="zh-CN">简体中文</button>
+                            <button class="lang-tab" data-lang="zh-TW">繁體中文</button>
+                        </div>
+                        <div id="objectives-container-en">
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control" placeholder="Enter learning objective">
+                                <button class="btn btn-primary" type="button" onclick="addObjective('en')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="objectives-container-zh-CN" style="display: none;">
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control" placeholder="输入学习目标">
+                                <button class="btn btn-primary" type="button" onclick="addObjective('zh-CN')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="objectives-container-zh-TW" style="display: none;">
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control" placeholder="輸入學習目標">
+                                <button class="btn btn-primary" type="button" onclick="addObjective('zh-TW')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Course Tags</label>
+                                <div class="language-tabs">
+                                    <button class="lang-tab active" data-lang="en">English</button>
+                                    <button class="lang-tab" data-lang="zh-CN">简体中文</button>
+                                    <button class="lang-tab" data-lang="zh-TW">繁體中文</button>
+                                </div>
+                                
+                                <div class="input-group mb-2" id="tag-group-en">
+                                    <input type="text" class="form-control" id="tag-input-en" placeholder="Enter tag and press Enter">
+                                    <button class="btn btn-primary" type="button" onclick="addTag('en')">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="tag-container" id="tags-en"></div>
+
+                                <div class="input-group mb-2" style="display: none;" id="tag-group-zh-CN">
+                                    <input type="text" class="form-control" id="tag-input-zh-CN" placeholder="输入标签">
+                                    <button class="btn btn-primary" type="button" onclick="addTag('zh-CN')">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="tag-container" id="tags-zh-CN" style="display: none;"></div>
+
+                                <div class="input-group mb-2" style="display: none;" id="tag-group-zh-TW">
+                                    <input type="text" class="form-control" id="tag-input-zh-TW" placeholder="輸入標籤">
+                                    <button class="btn btn-primary" type="button" onclick="addTag('zh-TW')">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="tag-container" id="tags-zh-TW" style="display: none;"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Preview Video URL</label>
+                                <input type="url" class="form-control" id="preview-video" placeholder="https://example.com/video.mp4">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Create Quiz -->
+                <div class="form-section" id="step-4">
+                    <h2 class="section-title">Sample Reviews</h2>
+                    <p class="section-subtitle">Add sample reviews and testimonials for your course</p>
+
+                    <div class="form-group">
+                        <label class="form-label">Sample Reviews</label>
+                        <button class="btn btn-primary mb-3" onclick="addReview()">
+                            <i class="fas fa-plus me-2"></i>Add Review
+                        </button>
+                        <div id="reviews-container">
+                            <!-- Reviews will be added here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: Publish Course -->
+                <div class="form-section" id="step-5">
+                    <h2 class="section-title">Course Preview</h2>
+                    <p class="section-subtitle">Review your course before publishing</p>
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="course-preview">
+                                <img src="/placeholder.svg?height=200&width=400" alt="Course Thumbnail" class="preview-thumbnail" id="preview-thumbnail">
+                                <h3 class="preview-title" id="preview-title">Course Title</h3>
+                                <p class="text-muted mb-3" id="preview-subtitle">Course subtitle will appear here</p>
+                                <div class="preview-price mb-3" id="preview-price">$0.00</div>
+                                <div class="mb-3">
+                                    <h6>Learning Objectives:</h6>
+                                    <ul id="preview-objectives" class="text-muted">
+                                        <!-- Objectives will be listed here -->
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h6>Course Content:</h6>
+                                    <div id="preview-lessons" class="text-muted">
+                                        <!-- Lessons will be listed here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="course-preview">
+                                <h6 class="mb-3">Course Statistics</h6>
+                                <div class="mb-2">
+                                    <strong>Total Lessons:</strong>
+                                    <span id="total-lessons">0</span>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Free Lessons:</strong>
+                                    <span id="free-lessons">0</span>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Total Duration:</strong>
+                                    <span id="total-duration">0:00</span>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Languages:</strong>
+                                    <span>EN, 中文</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="wizard-navigation">
+                    <button class="btn btn-outline-primary" id="prev-btn" onclick="previousStep()" style="display: none;">
+                        <i class="fas fa-arrow-left me-2"></i>Previous
+                    </button>
+                    <button class="btn btn-primary" id="next-btn" onclick="nextStep()">
+                        Next<i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <script>
+          const API_CONFIG = {
+            // Replace with your actual API endpoint
+        PUBLISH_URL: 'https://2eec-2400-adc5-432-5b00-971-16b7-9d3e-2536.ngrok-free.app/admin/api/courses', // Demo API
+            // LOGIN_URL: 'https://your-api.com/auth/login', // Your actual API
+        };
+        // Global variables
+        let currentStep = 1;
+        let totalSteps = 5;
+        let courseData = {
+            title: { en: '', 'zh-CN': '', 'zh-TW': '' },
+            subtitle: { en: '', 'zh-CN': '', 'zh-TW': '' },
+            price: 0,
+            preview_video: '',
+            thumbnail: '',
+            full_details: {
+                content: [],
+                reviews: {},
+                tags: { en: [], 'zh-CN': [], 'zh-TW': [] }
+            },
+            lessons: {}
+        };
+        let quillEditors = {};
+        let lessonCount = 0;
+        let reviewCount = 0;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeQuillEditors();
+            setupEventListeners();
+            updateStepDisplay();
+        });
+
+        // Initialize Quill editors
+        function initializeQuillEditors() {
+            const languages = ['en', 'zh-CN', 'zh-TW'];
+            languages.forEach(lang => {
+                quillEditors[`description-${lang}`] = new Quill(`#description-editor-${lang}`, {
+                    theme: 'snow',
+                    placeholder: 'Enter course description...',
+                    modules: {
+                        toolbar: [
+                            ['bold', 'italic', 'underline'],
+                            ['blockquote', 'code-block'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            ['link', 'image'],
+                            ['clean']
+                        ]
+                    }
+                });
+            });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Language tab switching
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('lang-tab')) {
+                    switchLanguageTab(e.target);
+                }
+            });
+
+            // File upload
+            document.getElementById('thumbnail-upload').addEventListener('change', function(e) {
+                handleFileUpload(e);
+            });
+
+            // Enter key for tags
+            document.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && e.target.id.includes('tag-input')) {
+                    const lang = e.target.id.split('-')[2];
+                    addTag(lang);
+                }
+            });
+        }
+
+        function switchLanguageTab(clickedTab) {
+    const container = clickedTab.closest('.form-group');
+    const lang = clickedTab.dataset.lang;
+    
+    // Update tab active state
+    container.querySelectorAll('.lang-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    clickedTab.classList.add('active');
+
+    // Show/hide corresponding inputs for regular inputs and textareas
+    const inputs = container.querySelectorAll('input, textarea, div[id*="editor"]');
+    inputs.forEach(input => {
+        if (input.id && input.id.includes(lang)) {
+            input.style.display = 'block';
+        } else if (input.id && (input.id.includes('-en') || input.id.includes('-zh-CN') || input.id.includes('-zh-TW'))) {
+            input.style.display = 'none';
+        }
+    });
+    
+    // Handle special cases for tags, objectives containers, and input groups
+    const containers = container.querySelectorAll('div[id*="container"], div[id*="group"]');
+    containers.forEach(cont => {
+        if (cont.id && cont.id.includes(lang)) {
+            cont.style.display = 'block';
+        } else if (cont.id && (cont.id.includes('-en') || cont.id.includes('-zh-CN') || cont.id.includes('-zh-TW'))) {
+            cont.style.display = 'none';
+        }
+    });
+}
+
+        // Handle file upload
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    courseData.thumbnail = e.target.result;
+                    document.getElementById('preview-thumbnail').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Add learning objective
+        function addObjective(lang) {
+            const container = document.getElementById(`objectives-container-${lang}`);
+            const input = container.querySelector('input');
+            const objective = input.value.trim();
+            
+            if (objective) {
+                const objectiveDiv = document.createElement('div');
+                objectiveDiv.className = 'input-group mb-2';
+                objectiveDiv.innerHTML = `
+                    <input type="text" class="form-control" value="${objective}" readonly>
+                    <button class="btn btn-danger" type="button" onclick="this.parentElement.remove()">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                container.insertBefore(objectiveDiv, container.lastElementChild);
+                input.value = '';
+            }
+        }
+
+        // Add lesson
+        function addLesson() {
+            lessonCount++;
+            const lessonsContainer = document.getElementById('lessons-container');
+            
+            const lessonDiv = document.createElement('div');
+            lessonDiv.className = 'lesson-item';
+            lessonDiv.innerHTML = `
+                <div class="lesson-header">
+                    <h6 class="lesson-title mb-0">Lesson ${lessonCount}</h6>
+                    <div class="lesson-actions">
+                        <button class="btn btn-warning btn-sm" onclick="toggleLessonContent(this)">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="removeLesson(this)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="lesson-content" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Lesson Title</label>
+                        <div class="language-tabs">
+                            <button class="lang-tab active" data-lang="en">English</button>
+                            <button class="lang-tab" data-lang="zh-CN">简体中文</button>
+                            <button class="lang-tab" data-lang="zh-TW">繁體中文</button>
+                        </div>
+                        <input type="text" class="form-control mb-2" id="lesson-title-en-${lessonCount}" placeholder="Enter lesson title in English">
+                        <input type="text" class="form-control mb-2" id="lesson-title-zh-CN-${lessonCount}" placeholder="输入中文课程标题" style="display: none;">
+                        <input type="text" class="form-control mb-2" id="lesson-title-zh-TW-${lessonCount}" placeholder="輸入中文課程標題" style="display: none;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Lesson Content</label>
+                        <div class="language-tabs">
+                            <button class="lang-tab active" data-lang="en">English</button>
+                            <button class="lang-tab" data-lang="zh-CN">简体中文</button>
+                            <button class="lang-tab" data-lang="zh-TW">繁體中文</button>
+                        </div>
+                        <textarea class="form-control mb-2" id="lesson-content-en-${lessonCount}" rows="4" placeholder="Enter lesson content in English"></textarea>
+                        <textarea class="form-control mb-2" id="lesson-content-zh-CN-${lessonCount}" rows="4" placeholder="输入中文课程内容" style="display: none;"></textarea>
+                        <textarea class="form-control mb-2" id="lesson-content-zh-TW-${lessonCount}" rows="4" placeholder="輸入中文課程內容" style="display: none;"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Video URL</label>
+                                <input type="url" class="form-control" id="lesson-video-${lessonCount}" placeholder="https://example.com/video.mp4">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Duration</label>
+                                <input type="text" class="form-control" id="lesson-duration-${lessonCount}" placeholder="10:30">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Settings</label>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" id="free-lesson-${lessonCount}">
+                                    <label class="form-check-label" for="free-lesson-${lessonCount}">
+                                        <i class="fas fa-unlock me-1"></i>Free Lesson
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            lessonsContainer.appendChild(lessonDiv);
+        }
+
+        // Toggle lesson content
+        function toggleLessonContent(button) {
+            const lessonItem = button.closest('.lesson-item');
+            const content = lessonItem.querySelector('.lesson-content');
+            const icon = button.querySelector('i');
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.className = 'fas fa-chevron-up';
+                button.innerHTML = '<i class="fas fa-chevron-up"></i> Collapse';
+            } else {
+                content.style.display = 'none';
+                icon.className = 'fas fa-edit';
+                button.innerHTML = '<i class="fas fa-edit"></i> Edit';
+            }
+        }
+
+        // Remove lesson
+        function removeLesson(button) {
+            if (confirm('Are you sure you want to remove this lesson?')) {
+                button.closest('.lesson-item').remove();
+            }
+        }
+
+        // Add tag
+        function addTag(lang) {
+            const input = document.getElementById(`tag-input-${lang}`);
+            const container = document.getElementById(`tags-${lang}`);
+            const tag = input.value.trim();
+            
+            if (tag && !courseData.full_details.tags[lang].includes(tag)) {
+                courseData.full_details.tags[lang].push(tag);
+                
+                const tagElement = document.createElement('span');
+                tagElement.className = 'tag';
+                tagElement.innerHTML = `
+                    ${tag}
+                    <span class="tag-remove" onclick="removeTag('${lang}', '${tag}', this)">
+                        <i class="fas fa-times"></i>
+                    </span>
+                `;
+                
+                container.appendChild(tagElement);
+                input.value = '';
+            }
+        }
+
+        // Remove tag
+        function removeTag(lang, tag, element) {
+            const index = courseData.full_details.tags[lang].indexOf(tag);
+            if (index > -1) {
+                courseData.full_details.tags[lang].splice(index, 1);
+            }
+            element.parentElement.remove();
+        }
+
+        // Add review
+        function addReview() {
+            reviewCount++;
+            const container = document.getElementById('reviews-container');
+            
+            const reviewDiv = document.createElement('div');
+            reviewDiv.className = 'lesson-item mb-3';
+            reviewDiv.innerHTML = `
+                <div class="lesson-header">
+                    <h6 class="mb-0">Review ${reviewCount}</h6>
+                    <button class="btn btn-danger btn-sm" onclick="this.closest('.lesson-item').remove()">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="lesson-content" style="display: block;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Reviewer Name</label>
+                                <input type="text" class="form-control" placeholder="Enter reviewer name">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Rating</label>
+                                <select class="form-select">
+                                    <option value="5">5 Stars</option>
+                                    <option value="4">4 Stars</option>
+                                    <option value="3">3 Stars</option>
+                                    <option value="2">2 Stars</option>
+                                    <option value="1">1 Star</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Review Comment</label>
+                        <textarea class="form-control" rows="3" placeholder="Enter review comment"></textarea>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(reviewDiv);
+        }
+
+        // Navigation functions
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                if (validateCurrentStep()) {
+                    currentStep++;
+                    updateStepDisplay();
+                    if (currentStep === totalSteps) {
+                        updatePreview();
+                    }
+                }
+            } else {
+                publishCourse();
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStepDisplay();
+            }
+        }
+
+        // Update step display
+        function updateStepDisplay() {
+            // Hide all sections
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show current section
+            document.getElementById(`step-${currentStep}`).classList.add('active');
+            
+            // Update progress steps
+            document.querySelectorAll('.step').forEach((step, index) => {
+                step.classList.remove('active', 'completed');
+                if (index + 1 < currentStep) {
+                    step.classList.add('completed');
+                } else if (index + 1 === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+            
+            // Update progress line
+            const progressPercentage = ((currentStep - 1) / (totalSteps - 1)) * 100;
+            document.getElementById('progress-line-active').style.width = progressPercentage + '%';
+            
+            // Update navigation buttons
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            prevBtn.style.display = currentStep > 1 ? 'block' : 'none';
+            
+            if (currentStep === totalSteps) {
+                nextBtn.innerHTML = '<i class="fas fa-rocket me-2"></i>Publish Course';
+                nextBtn.className = 'btn btn-success';
+            } else {
+                nextBtn.innerHTML = 'Next<i class="fas fa-arrow-right ms-2"></i>';
+                nextBtn.className = 'btn btn-primary';
+            }
+        }
+
+        // Validate current step
+      function validateCurrentStep() {
+    if (currentStep === 1) {
+        // Title validation (all languages)
+        const titleEn = document.getElementById('title-en').value.trim();
+        const titleZhCN = document.getElementById('title-zh-CN').value.trim();
+        const titleZhTW = document.getElementById('title-zh-TW').value.trim();
+
+        if (!titleEn || !titleZhCN || !titleZhTW) {
+            alert('Please enter the course title in all languages.');
+            return true;
+        }
+
+        // Subtitle validation (all languages)
+        const subtitleEn = document.getElementById('subtitle-en').value.trim();
+        const subtitleZhCN = document.getElementById('subtitle-zh-CN').value.trim();
+        const subtitleZhTW = document.getElementById('subtitle-zh-TW').value.trim();
+
+        if (!subtitleEn || !subtitleZhCN || !subtitleZhTW) {
+            alert('Please enter the course subtitle in all languages.');
+            return true;
+        }
+
+        // Price validation
+        const price = document.getElementById('price').value;
+        if (!price || isNaN(price) || Number(price) < 0) {
+            alert('Please enter a valid course price.');
+            return true;
+        }
+
+        // Thumbnail validation
+        const thumbnail = document.getElementById('thumbnail-upload').files[0];
+        if (!thumbnail) {
+            alert('Please upload a course thumbnail.');
+            return true;
+        }
+
+        // File type and size check (max 5MB)
+        const validTypes = ['image/jpeg', 'image/png'];
+        if (!validTypes.includes(thumbnail.type)) {
+            alert('Thumbnail must be a JPG or PNG image.');
+            return true;
+        }
+
+        const maxSizeMB = 5;
+        if (thumbnail.size > maxSizeMB * 1024 * 1024) {
+            alert('Thumbnail image must be less than 5MB.');
+            return true;
+        }
+    }
+
+    return true;
+}
+
+
+        // Update preview
+        function updatePreview() {
+            document.getElementById('preview-title').textContent = 
+                document.getElementById('title-en').value || 'Course Title';
+            document.getElementById('preview-subtitle').textContent = 
+                document.getElementById('subtitle-en').value || 'Course subtitle will appear here';
+            document.getElementById('preview-price').textContent = 
+                '$' + (document.getElementById('price').value || '0.00');
+            
+            // Update objectives
+            const objectivesContainer = document.getElementById('preview-objectives');
+            objectivesContainer.innerHTML = '';
+            document.querySelectorAll('#objectives-container-en input[readonly]').forEach(input => {
+                const li = document.createElement('li');
+                li.textContent = input.value;
+                objectivesContainer.appendChild(li);
+            });
+            
+            // Update lessons count
+            const lessons = document.querySelectorAll('.lesson-item');
+            document.getElementById('total-lessons').textContent = lessons.length;
+            
+            let freeLessons = 0;
+            lessons.forEach(lesson => {
+                const checkbox = lesson.querySelector('input[type="checkbox"]');
+                if (checkbox && checkbox.checked) {
+                    freeLessons++;
+                }
+            });
+            document.getElementById('free-lessons').textContent = freeLessons;
+        }
+
+        // Publish course
+ async function publishCourse() {
+    const courseData = collectFormData(); 
+    const nextBtn = document.getElementById('next-btn');
+
+    nextBtn.innerHTML = '<span class="loading me-2"></span>Publishing...';
+    nextBtn.disabled = true;
+
+    try {
+        const token = sessionStorage.getItem('authToken'); 
+
+        if (!token) {
+            throw new Error('Authentication token not found. Please log in again.');
+        }
+
+        const response = await fetch(API_CONFIG.PUBLISH_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(courseData),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to publish course');
+        }
+
+        const result = await response.json(); 
+        alert('Course published successfully!');
+        console.log('Server Response:', result);
+    } catch (error) {
+        console.error('Publish error:', error);
+        alert(error.message || 'Failed to publish course. Please try again.');
+    } finally {
+        nextBtn.innerHTML = '<i class="fas fa-rocket me-2"></i>Publish Course';
+        nextBtn.disabled = false;
+    }
+}
+
+        function collectFormData() {
+    // Basic info
+    courseData.title.en = document.getElementById('title-en').value;
+    courseData.title['zh-CN'] = document.getElementById('title-zh-CN').value;
+    courseData.title['zh-TW'] = document.getElementById('title-zh-TW').value;
+    
+    courseData.subtitle.en = document.getElementById('subtitle-en').value;
+    courseData.subtitle['zh-CN'] = document.getElementById('subtitle-zh-CN').value;
+    courseData.subtitle['zh-TW'] = document.getElementById('subtitle-zh-TW').value;
+    
+    courseData.price = parseFloat(document.getElementById('price').value) || 0;
+    courseData.preview_video = document.getElementById('preview-video').value;
+    
+    // About Course - Description from Quill editors
+    courseData.description = {
+        en: quillEditors['description-en']?.getContents() || '',
+        'zh-CN': quillEditors['description-zh-CN']?.getContents() || '',
+        'zh-TW': quillEditors['description-zh-TW']?.getContents() || ''
+    };
+    
+    // Learning Objectives
+    courseData.objectives = {
+        en: [],
+        'zh-CN': [],
+        'zh-TW': []
+    };
+    
+    ['en', 'zh-CN', 'zh-TW'].forEach(lang => {
+        const container = document.getElementById(`objectives-container-${lang}`);
+        const readonlyInputs = container.querySelectorAll('input[readonly]');
+        readonlyInputs.forEach(input => {
+            if (input.value.trim()) {
+                courseData.objectives[lang].push(input.value.trim());
+            }
+        });
+    });
+    
+    // Collect reviews
+    courseData.reviews = [];
+    const reviewItems = document.querySelectorAll('#reviews-container .lesson-item');
+    reviewItems.forEach((reviewItem, index) => {
+        const nameInput = reviewItem.querySelector('input[placeholder*="reviewer name"]');
+        const ratingSelect = reviewItem.querySelector('select');
+        const commentTextarea = reviewItem.querySelector('textarea');
+        
+        if (nameInput && ratingSelect && commentTextarea) {
+            courseData.reviews.push({
+                reviewer_name: nameInput.value || '',
+                rating: parseInt(ratingSelect.value) || 5,
+                comment: commentTextarea.value || ''
+            });
+        }
+    });
+    
+    // Collect lessons
+    const lessons = document.querySelectorAll('.lesson-item');
+    lessons.forEach((lesson, index) => {
+        const lessonKey = `lesson_${index + 1}`;
+        const lessonId = index + 1;
+        
+        courseData.lessons[lessonKey] = {
+            title: {
+                en: document.getElementById(`lesson-title-en-${lessonId}`)?.value || '',
+                'zh-CN': document.getElementById(`lesson-title-zh-CN-${lessonId}`)?.value || '',
+                'zh-TW': document.getElementById(`lesson-title-zh-TW-${lessonId}`)?.value || ''
+            },
+            content: {
+                en: document.getElementById(`lesson-content-en-${lessonId}`)?.value || '',
+                'zh-CN': document.getElementById(`lesson-content-zh-CN-${lessonId}`)?.value || '',
+                'zh-TW': document.getElementById(`lesson-content-zh-TW-${lessonId}`)?.value || ''
+            },
+            video_url: document.getElementById(`lesson-video-${lessonId}`)?.value || '',
+            video_duration: document.getElementById(`lesson-duration-${lessonId}`)?.value || '',
+            is_free: document.getElementById(`free-lesson-${lessonId}`)?.checked || false
+        };
+    });
+}
+
+        // Save as draft functionality
+        function saveAsDraft() {
+            collectFormData();
+            
+            const saveBtn = document.querySelector('.btn-save-draft');
+            const originalText = saveBtn.textContent;
+            saveBtn.innerHTML = '<span class="loading me-2"></span>Saving...';
+            saveBtn.disabled = true;
+            
+            setTimeout(() => {
+                alert('Course saved as draft successfully!');
+                console.log('Draft Course Data:', JSON.stringify(courseData, null, 2));
+                
+                saveBtn.textContent = originalText;
+                saveBtn.disabled = false;
+            }, 1500);
+        }
+
+        // Top publish course functionality
+        function publishCourseFromTop() {
+            if (currentStep < totalSteps) {
+                if (confirm('You haven\'t completed all steps. Do you want to publish the course with current data?')) {
+                    collectFormData();
+                    publishCourseAction();
+                }
+            } else {
+                collectFormData();
+                publishCourseAction();
+            }
+        }
+
+        function publishCourseAction() {
+            const publishBtn = document.querySelector('.btn-publish');
+            const originalText = publishBtn.textContent;
+            publishBtn.innerHTML = '<span class="loading me-2"></span>Publishing...';
+            publishBtn.disabled = true;
+            
+            setTimeout(() => {
+                alert('Course published successfully!');
+                console.log('Published Course Data:', JSON.stringify(courseData, null, 2));
+                
+                publishBtn.textContent = originalText;
+                publishBtn.disabled = false;
+            }, 2000);
+        }
+
+        // Toggle sidebar for mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            sidebar.classList.toggle('show');
+            if (overlay) {
+                overlay.classList.toggle('show');
+            }
+        }
+
+        // Show section
+        function showSection(section) {
+            console.log('Showing section:', section);
+        }
+    </script>
+</body>
+</html>

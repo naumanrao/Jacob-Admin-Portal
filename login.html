@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Course Management Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 400;
+        }
+
+        .required {
+            color: #666;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e1e1e1;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: #fff;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: #999;
+        }
+
+        .form-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #6366f1;
+        }
+
+        .remember-me label {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .forgot-password {
+            font-size: 14px;
+            color: #6366f1;
+            text-decoration: none;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+            color: #5855eb;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .login-button:hover {
+            background: linear-gradient(135deg, #5855eb 0%, #7c3aed 100%);
+            transform: translateY(-1px);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .login-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border: none;
+        }
+
+        .alert-danger {
+            background-color: #fef2f2;
+            color: #dc2626;
+        }
+
+        .alert-success {
+            background-color: #f0fdf4;
+            color: #16a34a;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            .login-title {
+                font-size: 24px;
+                margin-bottom: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1 class="login-title">Login</h1>
+        
+        <!-- Alert Messages -->
+        <div id="alert-container"></div>
+
+        <!-- Login Form -->
+        <form id="loginForm">
+            <div class="form-group">
+                <label class="form-label">Username or email <span class="required">*</span></label>
+                <input type="text" class="form-control" id="email" placeholder="" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password <span class="required">*</span></label>
+                <input type="password" class="form-control" id="password" placeholder="" required>
+            </div>
+
+            <div class="form-row">
+                <div class="remember-me">
+                    <input type="checkbox" id="rememberMe">
+                    <label for="rememberMe">Remember me</label>
+                </div>
+                <a href="#" class="forgot-password" onclick="showForgotPassword()">Lost your password?</a>
+            </div>
+
+            <button type="submit" class="login-button" id="loginBtn">
+                <span id="button-text">Log In</span>
+                <i class="fas fa-arrow-right" id="button-icon"></i>
+            </button>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Configuration
+        const API_CONFIG = {
+            // Replace with your actual API endpoint
+            LOGIN_URL: 'https://2eec-2400-adc5-432-5b00-971-16b7-9d3e-2536.ngrok-free.app/admin/api/login', // Demo API
+            // LOGIN_URL: 'https://your-api.com/auth/login', // Your actual API
+        };
+
+        // DOM Elements
+        const loginForm = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const rememberMeInput = document.getElementById('rememberMe');
+        const loginBtn = document.getElementById('loginBtn');
+        const buttonText = document.getElementById('button-text');
+        const buttonIcon = document.getElementById('button-icon');
+        const alertContainer = document.getElementById('alert-container');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is already logged in
+            checkExistingAuth();
+            
+            // Load remembered credentials if available
+            loadRememberedCredentials();
+        });
+
+        // Check if user is already authenticated
+        function checkExistingAuth() {
+            const token = sessionStorage.getItem('authToken');
+            const userInfo = sessionStorage.getItem('userInfo');
+            
+            if (token && userInfo) {
+                showAlert('You are already logged in. Redirecting...', 'success');
+                setTimeout(() => {
+                    redirectToAdmin();
+                }, 1000);
+            }
+        }
+
+        // Load remembered credentials
+        function loadRememberedCredentials() {
+            const rememberedEmail = localStorage.getItem('rememberedEmail');
+            const rememberedPassword = localStorage.getItem('rememberedPassword');
+            
+            if (rememberedEmail) {
+                emailInput.value = rememberedEmail;
+                rememberMeInput.checked = true;
+                
+                if (rememberedPassword) {
+                    passwordInput.value = rememberedPassword;
+                }
+            }
+        }
+
+        // Handle form submission
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            if (!email || !password) {
+                showAlert('Please fill in all fields', 'danger');
+                return;
+            }
+            
+            // Handle remember me
+            if (rememberMeInput.checked) {
+                localStorage.setItem('rememberedEmail', email);
+                localStorage.setItem('rememberedPassword', password);
+            } else {
+                localStorage.removeItem('rememberedEmail');
+                localStorage.removeItem('rememberedPassword');
+            }
+            
+            await handleLogin(email, password);
+        });
+
+        // Handle login process
+        async function handleLogin(email, password) {
+            try {
+                // Show loading state
+                setLoadingState(true);
+                clearAlert();
+                
+                // Prepare login data
+                const loginData = {
+                    username: email,
+                    password: password
+                };
+                
+                // Make API call
+                const response = await fetch(API_CONFIG.LOGIN_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(loginData)
+                });
+                
+                // For demo purposes, we'll simulate a successful login
+                // Replace this with actual API response handling
+                if (response.ok) {
+                    const data = await response.json(); 
+                    console.log(data)
+                    
+                    await handleLoginSuccess(data);
+                } else {
+                    throw new Error('Invalid credentials');
+                }
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                handleLoginError(error.message || 'Login failed. Please try again.');
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        // Handle successful login
+        async function handleLoginSuccess(response) {
+            try {
+                // Store auth token in session storage
+                sessionStorage.setItem('authToken', response.token);
+                
+                // Store user info
+                sessionStorage.setItem('userInfo', JSON.stringify(response.user));
+                
+                // Store login timestamp
+                sessionStorage.setItem('loginTime', new Date().toISOString());
+                
+                // Show success message
+                showAlert('Login successful! Redirecting...', 'success');
+                
+                // Redirect after short delay
+                setTimeout(() => {
+                    redirectToAdmin();
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Error storing auth data:', error);
+                showAlert('Login successful but failed to store session. Please try again.', 'danger');
+            }
+        }
+
+        // Handle login error
+        function handleLoginError(message) {
+            showAlert(message, 'danger');
+            
+            // Clear password field on error
+            passwordInput.value = '';
+            passwordInput.focus();
+        }
+
+        // Redirect to admin portal
+        function redirectToAdmin() {
+            // Replace with your actual admin portal URL
+            window.location.href = 'index1.html';
+        }
+
+        // Set loading state
+        function setLoadingState(isLoading) {
+            loginBtn.disabled = isLoading;
+            
+            if (isLoading) {
+                buttonText.textContent = 'Logging in...';
+                buttonIcon.style.display = 'none';
+                const spinner = document.createElement('div');
+                spinner.className = 'loading-spinner';
+                spinner.id = 'loading-spinner';
+                loginBtn.appendChild(spinner);
+            } else {
+                buttonText.textContent = 'Log In';
+                buttonIcon.style.display = 'inline';
+                const spinner = document.getElementById('loading-spinner');
+                if (spinner) {
+                    spinner.remove();
+                }
+            }
+        }
+
+        // Show alert message
+        function showAlert(message, type = 'danger') {
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            
+            alertContainer.innerHTML = `
+                <div class="alert ${alertClass}">
+                    ${message}
+                </div>
+            `;
+            
+            // Auto-hide success messages
+            if (type === 'success') {
+                setTimeout(clearAlert, 5000);
+            }
+        }
+
+        // Clear alert message
+        function clearAlert() {
+            alertContainer.innerHTML = '';
+        }
+
+        // Show forgot password (placeholder)
+        function showForgotPassword() {
+            alert('Forgot password functionality would be implemented here.\n\nFor demo purposes, use any email and password to login.');
+        }
+
+        // Utility functions
+        function getAuthToken() {
+            return sessionStorage.getItem('authToken');
+        }
+
+        function getUserInfo() {
+            const userInfo = sessionStorage.getItem('userInfo');
+            return userInfo ? JSON.parse(userInfo) : null;
+        }
+
+        function logout() {
+            sessionStorage.removeItem('authToken');
+            sessionStorage.removeItem('userInfo');
+            sessionStorage.removeItem('loginTime');
+            window.location.href = 'login.html';
+        }
+
+        function isTokenExpired() {
+            const loginTime = sessionStorage.getItem('loginTime');
+            if (!loginTime) return true;
+            
+            const loginDate = new Date(loginTime);
+            const now = new Date();
+            const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
+            
+            // Token expires after 24 hours
+            return hoursDiff > 24;
+        }
+    </script>
+</body>
+</html>
