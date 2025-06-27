@@ -730,23 +730,23 @@
                         <div class="step-label">Course Details</div>
                     </div>
                     
-                    <div class="step" data-step="2">
+                    <!-- <div class="step" data-step="2">
                         <div class="step-circle">2</div>
                         <div class="step-label">Upload Videos</div>
+                    </div> -->
+                    
+                    <div class="step" data-step="2">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">About Course</div>
                     </div>
                     
                     <div class="step" data-step="3">
                         <div class="step-circle">3</div>
-                        <div class="step-label">About Course</div>
+                        <div class="step-label">Sample Reviews</div>
                     </div>
                     
                     <div class="step" data-step="4">
                         <div class="step-circle">4</div>
-                        <div class="step-label">Sample Reviews</div>
-                    </div>
-                    
-                    <div class="step" data-step="5">
-                        <div class="step-circle">5</div>
                         <div class="step-label">Publish Course</div>
                     </div>
                 </div>
@@ -806,13 +806,14 @@
                                     <small class="text-muted">JPG, PNG up to 5MB</small>
                                 </div>
                                 <input type="file" id="thumbnail-upload" accept="image/*" style="display: none;">
+                                 <img id="preview-img-thumbnail" src="" alt="Thumbnail Preview" class="img-fluid mt-2" style="max-height: 150px; display: none;" />
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Step 2: Upload Videos -->
-                <div class="form-section" id="step-2">
+                <!-- <div class="form-section" id="step-2">
                     <h2 class="section-title">Upload Videos</h2>
                     <p class="section-subtitle">Add video content and lessons to your course</p>
 
@@ -827,12 +828,12 @@
                     </div>
 
                     <div id="lessons-container">
-                        <!-- Lessons will be dynamically added here -->
+                       
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Step 3: About Course -->
-                <div class="form-section" id="step-3">
+                <div class="form-section" id="step-2">
                     <h2 class="section-title">About Course</h2>
                     <p class="section-subtitle">Provide detailed information about your course</p>
 
@@ -925,8 +926,8 @@
                     </div>
                 </div>
 
-                <!-- Step 4: Create Quiz -->
-                <div class="form-section" id="step-4">
+               
+                <div class="form-section" id="step-3">
                     <h2 class="section-title">Sample Reviews</h2>
                     <p class="section-subtitle">Add sample reviews and testimonials for your course</p>
 
@@ -942,7 +943,7 @@
                 </div>
 
                 <!-- Step 5: Publish Course -->
-                <div class="form-section" id="step-5">
+                <div class="form-section" id="step-4">
                     <h2 class="section-title">Course Preview</h2>
                     <p class="section-subtitle">Review your course before publishing</p>
 
@@ -1009,12 +1010,13 @@
     <script>
           const API_CONFIG = {
             // Replace with your actual API endpoint
-        PUBLISH_URL: 'https://2eec-2400-adc5-432-5b00-971-16b7-9d3e-2536.ngrok-free.app/admin/api/courses', // Demo API
+        PUBLISH_URL: 'https://f9d8-2400-adc5-432-5b00-d861-52e-4537-993d.ngrok-free.app/admin/api/courses', // Demo API
             // LOGIN_URL: 'https://your-api.com/auth/login', // Your actual API
+           
         };
         // Global variables
         let currentStep = 1;
-        let totalSteps = 5;
+        let totalSteps = 4;
         let courseData = {
             title: { en: '', 'zh-CN': '', 'zh-TW': '' },
             subtitle: { en: '', 'zh-CN': '', 'zh-TW': '' },
@@ -1067,10 +1069,10 @@
                     switchLanguageTab(e.target);
                 }
             });
-
+const courseId = 'test';
             // File upload
             document.getElementById('thumbnail-upload').addEventListener('change', function(e) {
-                handleFileUpload(e);
+                handleFileUpload(e,courseId);
             });
 
             // Enter key for tags
@@ -1114,17 +1116,54 @@
 }
 
         // Handle file upload
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    courseData.thumbnail = e.target.result;
-                    document.getElementById('preview-thumbnail').src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
+      async function handleFileUpload(event, courseId) {
+    const file = event.target.files[0];
+    if (!file || !courseId) return;
+
+    const formData = new FormData();
+    formData.append('thumbnail', file);
+
+    const token = sessionStorage.getItem('authToken');
+    if (!token) {
+        alert('Auth token missing. Please log in again.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`https://f9d8-2400-adc5-432-5b00-d861-52e-4537-993d.ngrok-free.app/admin/api/courses/${courseId}/upload-assets`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+                
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to upload thumbnail');
         }
+
+        const result = await response.json();
+        if (result.success && result.data?.thumbnail_key) {
+           
+            courseData.thumbnail_key = result.data.thumbnail_key;
+
+            // ✅ Optionally update preview
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('preview-img-thumbnail').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            throw new Error('Upload succeeded but no thumbnail_key received');
+        }
+
+    } catch (error) {
+        console.error('Upload error:', error);
+        alert(error.message || 'Thumbnail upload failed');
+    }
+}
+
 
         // Add learning objective
         function addObjective(lang) {
@@ -1471,20 +1510,23 @@
         }
 
         // Publish course
- async function publishCourse() {
-    const courseData = collectFormData(); 
+async function publishCourse() {
+    const courseData = collectFormData(); // returns { course_template: { ... } }
     const nextBtn = document.getElementById('next-btn');
 
+    // UI: Set loading state
     nextBtn.innerHTML = '<span class="loading me-2"></span>Publishing...';
     nextBtn.disabled = true;
 
     try {
-        const token = sessionStorage.getItem('authToken'); 
+        // ✅ Get token from sessionStorage
+        const token = sessionStorage.getItem('authToken');
 
         if (!token) {
             throw new Error('Authentication token not found. Please log in again.');
         }
 
+        // ✅ Make API POST request
         const response = await fetch(API_CONFIG.PUBLISH_URL, {
             method: 'POST',
             headers: {
@@ -1494,83 +1536,106 @@
             body: JSON.stringify(courseData),
         });
 
+        // ✅ Handle response
         if (!response.ok) {
-            throw new Error('Failed to publish course');
+            // Try to extract error details from backend if available
+            const errorDetails = await response.json().catch(() => null);
+            const message = errorDetails?.message || 'Failed to publish course';
+            throw new Error(message);
         }
 
-        const result = await response.json(); 
+        const result = await response.json();
         alert('Course published successfully!');
-        console.log('Server Response:', result);
+        console.log('✅ Server Response:', result);
+
     } catch (error) {
-        console.error('Publish error:', error);
+        console.error('❌ Publish error:', error);
         alert(error.message || 'Failed to publish course. Please try again.');
     } finally {
+        // UI: Reset button
         nextBtn.innerHTML = '<i class="fas fa-rocket me-2"></i>Publish Course';
         nextBtn.disabled = false;
     }
 }
 
-        function collectFormData() {
-    // Basic info
-    courseData.title.en = document.getElementById('title-en').value;
-    courseData.title['zh-CN'] = document.getElementById('title-zh-CN').value;
-    courseData.title['zh-TW'] = document.getElementById('title-zh-TW').value;
-    
-    courseData.subtitle.en = document.getElementById('subtitle-en').value;
-    courseData.subtitle['zh-CN'] = document.getElementById('subtitle-zh-CN').value;
-    courseData.subtitle['zh-TW'] = document.getElementById('subtitle-zh-TW').value;
-    
-    courseData.price = parseFloat(document.getElementById('price').value) || 0;
-    courseData.preview_video = document.getElementById('preview-video').value;
-    
-    // About Course - Description from Quill editors
-    courseData.description = {
-        en: quillEditors['description-en']?.getContents() || '',
-        'zh-CN': quillEditors['description-zh-CN']?.getContents() || '',
-        'zh-TW': quillEditors['description-zh-TW']?.getContents() || ''
-    };
-    
-    // Learning Objectives
-    courseData.objectives = {
-        en: [],
-        'zh-CN': [],
-        'zh-TW': []
-    };
-    
-    ['en', 'zh-CN', 'zh-TW'].forEach(lang => {
-        const container = document.getElementById(`objectives-container-${lang}`);
-        const readonlyInputs = container.querySelectorAll('input[readonly]');
-        readonlyInputs.forEach(input => {
-            if (input.value.trim()) {
-                courseData.objectives[lang].push(input.value.trim());
+ function collectFormData() {
+    const course_template = {
+        title: {
+            en: document.getElementById('title-en').value,
+            'zh-CN': document.getElementById('title-zh-CN').value,
+            'zh-TW': document.getElementById('title-zh-TW').value
+        },
+        subtitle: {
+            en: document.getElementById('subtitle-en').value,
+            'zh-CN': document.getElementById('subtitle-zh-CN').value,
+            'zh-TW': document.getElementById('subtitle-zh-TW').value
+        },
+        price: parseFloat(document.getElementById('price').value) || 0,
+        preview_video: document.getElementById('preview-video').value,
+        thumbnail: courseData.thumbnail_key || '', // You need this input
+        full_details: {
+            content: [
+                {
+                    text: {
+                        en: "Welcome to this course!",
+                        'zh-CN': "欢迎参加本课程！",
+                        'zh-TW': "歡迎參加本課程！"
+                    },
+                    type: "p"
+                },
+                {
+                    text: {
+                        li1: {
+                            en: "Understand the basics of the topic.",
+                            'zh-CN': "了解该主题的基础知识。",
+                            'zh-TW': "了解該主題的基礎知識。"
+                        },
+                        li2: {
+                            en: "Gain practical skills through exercises.",
+                            'zh-CN': "通过练习获得实用技能。",
+                            'zh-TW': "通過練習獲得實用技能。"
+                        }
+                    },
+                    type: "li"
+                }
+            ],
+            reviews: {},
+            tags: {
+                en: ['Programming', 'Technology'],
+                'zh-CN': ['编程', '技术'],
+                'zh-TW': ['程式設計', '技術']
             }
-        });
-    });
-    
-    // Collect reviews
-    courseData.reviews = [];
+        },
+        lessons: {}
+    };
+
+    // Fill in reviews
     const reviewItems = document.querySelectorAll('#reviews-container .lesson-item');
     reviewItems.forEach((reviewItem, index) => {
         const nameInput = reviewItem.querySelector('input[placeholder*="reviewer name"]');
         const ratingSelect = reviewItem.querySelector('select');
         const commentTextarea = reviewItem.querySelector('textarea');
-        
+
         if (nameInput && ratingSelect && commentTextarea) {
-            courseData.reviews.push({
-                reviewer_name: nameInput.value || '',
-                rating: parseInt(ratingSelect.value) || 5,
-                comment: commentTextarea.value || ''
-            });
+            course_template.full_details.reviews[`user_${index + 1}`] = {
+                name: nameInput.value || '',
+                comment: {
+                    en: commentTextarea.value || '',
+                    'zh-CN': commentTextarea.value || '',
+                    'zh-TW': commentTextarea.value || ''
+                },
+                rating: parseInt(ratingSelect.value) || 5
+            };
         }
     });
-    
-    // Collect lessons
-    const lessons = document.querySelectorAll('.lesson-item');
-    lessons.forEach((lesson, index) => {
+
+    // Fill in lessons
+    const lessonItems = document.querySelectorAll('.lesson-item');
+    lessonItems.forEach((lesson, index) => {
         const lessonKey = `lesson_${index + 1}`;
         const lessonId = index + 1;
-        
-        courseData.lessons[lessonKey] = {
+
+        course_template.lessons[lessonKey] = {
             title: {
                 en: document.getElementById(`lesson-title-en-${lessonId}`)?.value || '',
                 'zh-CN': document.getElementById(`lesson-title-zh-CN-${lessonId}`)?.value || '',
@@ -1586,7 +1651,12 @@
             is_free: document.getElementById(`free-lesson-${lessonId}`)?.checked || false
         };
     });
+
+    return {
+        course_template
+    };
 }
+
 
         // Save as draft functionality
         function saveAsDraft() {
