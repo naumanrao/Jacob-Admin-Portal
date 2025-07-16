@@ -1,0 +1,2467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JacobLoveis - Course Management Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4285F4;
+            --primary-hover: #3367D6;
+            --success-color: #34A853;
+            --warning-color: #FBBC04;
+            --danger-color: #EA4335;
+            --dark-color: #202124;
+            --light-gray: #F8F9FA;
+            --border-color: #E8EAED;
+            --text-primary: #202124;
+            --text-secondary: #5F6368;
+            --sidebar-width: 280px;
+            --border-radius: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--light-gray);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid var(--border-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .sidebar-menu {
+            padding: 1rem 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .menu-item:hover {
+            background-color: #F1F3F4;
+            color: var(--text-primary);
+        }
+
+        .menu-item.active {
+            background-color: #E8F0FE;
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        .menu-item i {
+            width: 20px;
+            margin-right: 0.75rem;
+            font-size: 1rem;
+        }
+
+        .menu-badge {
+            background: var(--primary-color);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 12px;
+            margin-left: auto;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .top-navbar {
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .breadcrumb-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .breadcrumb-nav a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn-save-draft {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .btn-publish {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .btn-publish:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Content Area */
+        .content-area {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Progress Steps */
+        .progress-container {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            margin: 2rem 0;
+        }
+
+        .progress-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--border-color);
+            z-index: 1;
+            transform: translateY(-50%);
+        }
+
+        .progress-line-active {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            height: 2px;
+            background: var(--primary-color);
+            z-index: 2;
+            transform: translateY(-50%);
+            transition: width 0.3s ease;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 3;
+            background: var(--light-gray);
+            padding: 0.5rem;
+            border-radius: var(--border-radius);
+        }
+
+        .step-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            margin-bottom: 0.5rem;
+        }
+
+        .step.active .step-circle {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .step.completed .step-circle {
+            background: var(--success-color);
+            border-color: var(--success-color);
+            color: white;
+        }
+
+        .step.completed .step-circle::before {
+            content: '✓';
+            font-size: 0.75rem;
+        }
+
+        .step-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .step.active .step-label {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        /* Form Sections */
+        .form-container {
+            background: white;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .form-section {
+            display: none;
+            padding: 2rem;
+        }
+
+        .form-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .section-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            display: block;
+            font-size: 0.875rem;
+        }
+
+        .form-control, .form-select {
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 0.75rem;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+            outline: none;
+        }
+
+        /* Language Tabs */
+        .language-tabs {
+            display: flex;
+            gap: 0.25rem;
+            margin-bottom: 0.75rem;
+            background: var(--light-gray);
+            padding: 0.25rem;
+            border-radius: var(--border-radius);
+        }
+
+        .lang-tab {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: none;
+            border-radius: calc(var(--border-radius) - 2px);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+            font-weight: 500;
+            flex: 1;
+            text-align: center;
+        }
+
+        .lang-tab.active {
+            background: white;
+            color: var(--primary-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* File Upload */
+        .file-upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            background: #FAFBFC;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .file-upload-area:hover {
+            border-color: var(--primary-color);
+            background: #F8F9FF;
+        }
+
+        .file-upload-icon {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        /* Lesson Management */
+        .lesson-item {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .lesson-header {
+            padding: 1rem 1.5rem;
+            background: #FAFBFC;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .lesson-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .lesson-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .lesson-content {
+            padding: 1.5rem;
+        }
+
+        /* Tags */
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .tag {
+            background: #E8F0FE;
+            color: var(--primary-color);
+            padding: 0.25rem 0.75rem;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            opacity: 0.7;
+            font-size: 0.625rem;
+        }
+
+        .tag-remove:hover {
+            opacity: 1;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-outline-primary {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            border: none;
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+            border: none;
+            color: var(--text-primary);
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            border: none;
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        /* Navigation Buttons */
+        .wizard-navigation {
+            display: flex;
+            justify-content: space-between;
+            padding: 1.5rem 2rem;
+            background: #FAFBFC;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Course Preview */
+        .course-preview {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+        }
+
+        .preview-thumbnail {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+        }
+
+        .preview-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .preview-price {
+            color: var(--success-color);
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        /* NEW STYLES FOR COURSES LIST */
+        .page-section {
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .search-filter {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            max-width: 300px;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+        }
+
+        .filter-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background: white;
+        }
+
+        .courses-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .courses-table th,
+        .courses-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .courses-table th {
+            background: #F8F9FA;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .course-thumbnail {
+            width: 60px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .course-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .course-details h6 {
+            margin: 0;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .course-details p {
+            margin: 0;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-published {
+            background: #E8F5E8;
+            color: #2E7D32;
+        }
+
+        .status-draft {
+            background: #F3F4F6;
+            color: #6B7280;
+        }
+
+        .price {
+            font-weight: 600;
+            color: var(--success-color);
+        }
+
+        .rating {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .rating .star {
+            color: #FFC107;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-action {
+            padding: 0.375rem 0.75rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-view {
+            background: #E3F2FD;
+            color: #1976D2;
+        }
+
+        .btn-view:hover {
+            background: #BBDEFB;
+        }
+
+        .btn-edit {
+            background: #FFF3E0;
+            color: #F57C00;
+        }
+
+        .btn-edit:hover {
+            background: #FFE0B2;
+        }
+
+        .btn-delete {
+            background: #FFEBEE;
+            color: #D32F2F;
+        }
+
+        .btn-delete:hover {
+            background: #FFCDD2;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 100%;
+                max-width: 320px;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-area {
+                padding: 1rem;
+            }
+
+            .progress-steps {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .progress-line,
+            .progress-line-active {
+                display: none;
+            }
+
+            .step {
+                flex-direction: row;
+                gap: 0.75rem;
+                width: 100%;
+                justify-content: flex-start;
+                padding: 1rem;
+            }
+
+            .step-circle {
+                margin-bottom: 0;
+            }
+
+            .step-label {
+                white-space: normal;
+                text-align: left;
+            }
+
+            .wizard-navigation {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .language-tabs {
+                flex-direction: column;
+            }
+
+            .lang-tab {
+                flex: none;
+            }
+
+            .search-filter {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-input {
+                max-width: none;
+            }
+        }
+
+        /* Sidebar overlay for mobile */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Rich Text Editor */
+        .ql-toolbar {
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+        }
+
+        .ql-container {
+            border: 1px solid var(--border-color);
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Lesson Management Modal -->
+<!-- Lesson Management Modal -->
+<div class="modal fade" id="lessonModal" tabindex="-1" aria-labelledby="lessonModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <!-- Title will be set dynamically -->
+        <h5 class="modal-title" id="lessonModalLabel">Manage Lessons</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h5 id="modal-subheading">Course Lessons</h5>
+            <p class="text-muted mb-0">Manage your course lessons and video content</p>
+          </div>
+          <button class="btn btn-primary" id="add-lesson-btn" onclick="addLesson()">
+            <i class="fas fa-plus me-2"></i>Add Lesson
+          </button>
+        </div>
+
+        <div id="lessons-container">
+          <!-- Lesson blocks will be appended here -->
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button class="btn btn-success" id="save-lessons-btn" onclick="saveLessons()">Save Lessons</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+    <!-- Sidebar overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <div class="logo-text">Jacob Loveis</div>
+        </div>
+        <nav class="sidebar-menu">
+            <a href="#" class="menu-item active" onclick="showSection('courses')" id="menu-publish">
+                <i class="fas fa-book-open"></i> Publish Courses
+            </a>
+            <a href="#" class="menu-item" onclick="showSection('courses-list')" id="menu-list">
+                <i class="fas fa-list"></i> Courses List
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navbar -->
+        <nav class="top-navbar">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-link d-md-none me-3" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="breadcrumb-nav">
+                    <a href="#">Home</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <span id="breadcrumb-text">Create Course</span>
+                </div>
+            </div>
+            <div class="navbar-actions">
+                <button class="btn btn-save-draft" onclick="saveAsDraft()">Save As Draft</button>
+                <button class="btn btn-publish" onclick="publishCourseFromTop()">Publish Course</button>
+            </div>
+        </nav>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- EXISTING COURSE CREATION SECTION -->
+            <div class="page-section active" id="course-creation-section">
+                <!-- Progress Container -->
+                <div class="progress-container">
+                    <div class="progress-steps">
+                        <div class="progress-line"></div>
+                        <div class="progress-line-active" id="progress-line-active" style="width: 20%;"></div>
+                        
+                        <div class="step active" data-step="1">
+                            <div class="step-circle">1</div>
+                            <div class="step-label">Course Details</div>
+                        </div>
+                        
+                        <div class="step" data-step="2">
+                            <div class="step-circle">2</div>
+                            <div class="step-label">About Course</div>
+                        </div>
+                        
+                        <div class="step" data-step="3">
+                            <div class="step-circle">3</div>
+                            <div class="step-label">Sample Reviews</div>
+                        </div>
+                        
+                        <div class="step" data-step="4">
+                            <div class="step-circle">4</div>
+                            <div class="step-label">Publish Course</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Container -->
+                <div class="form-container">
+                    <!-- Step 1: Course Details -->
+                    <div class="form-section active" id="step-1">
+                        <h2 class="section-title">Course Details</h2>
+                        <p class="section-subtitle">Enter the basic information about your course</p>
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label class="form-label">Course Title</label>
+                                    <div class="language-tabs">
+                                        <button class="lang-tab active" data-lang="en">English</button>
+                                        <button class="lang-tab" data-lang="zh-CN">简体中文</button>
+                                        <button class="lang-tab" data-lang="zh-TW">繁體中文</button>
+                                    </div>
+                                    <input type="text" class="form-control" id="title-en" placeholder="Enter course title in English">
+                                    <input type="text" class="form-control" id="title-zh-CN" placeholder="输入中文课程标题" style="display: none;">
+                                    <input type="text" class="form-control" id="title-zh-TW" placeholder="輸入中文課程標題" style="display: none;">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Course Subtitle</label>
+                                    <div class="language-tabs">
+                                        <button class="lang-tab active" data-lang="en">English</button>
+                                        <button class="lang-tab" data-lang="zh-CN">简体中文</button>
+                                        <button class="lang-tab" data-lang="zh-TW">繁體中文</button>
+                                    </div>
+                                    <textarea class="form-control" id="subtitle-en" rows="3" placeholder="Brief description of your course"></textarea>
+                                    <textarea class="form-control" id="subtitle-zh-CN" rows="3" placeholder="课程简短描述" style="display: none;"></textarea>
+                                    <textarea class="form-control" id="subtitle-zh-TW" rows="3" placeholder="課程簡短描述" style="display: none;"></textarea>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label">Course Price ($)</label>
+                                            <input type="number" class="form-control" id="price" placeholder="0.00" min="0" step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label">Course Thumbnail</label>
+                                    <div class="file-upload-area" onclick="document.getElementById('thumbnail-upload').click()">
+                                        <div class="file-upload-icon">
+                                            <i class="fas fa-cloud-upload-alt"></i>
+                                        </div>
+                                        <p class="mb-1">Click to upload thumbnail</p>
+                                        <small class="text-muted">JPG, PNG up to 5MB</small>
+                                    </div>
+                                    <input type="file" id="thumbnail-upload" accept="image/*" style="display: none;">
+                                    <img id="preview-img-thumbnail"  alt="Thumbnail Preview" class="img-fluid mt-2" style="max-height: 150px; display: none;" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: About Course -->
+                    <div class="form-section" id="step-2">
+                        <h2 class="section-title">About Course</h2>
+                        <p class="section-subtitle">Provide detailed information about your course</p>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Course Tags</label>
+                                    <div class="language-tabs">
+                                        <button class="lang-tab active" data-lang="en">English</button>
+                                        <button class="lang-tab" data-lang="zh-CN">简体中文</button>
+                                        <button class="lang-tab" data-lang="zh-TW">繁體中文</button>
+                                    </div>
+                                    
+                                    <div class="input-group mb-2" id="tag-group-en">
+                                        <input type="text" class="form-control" id="tag-input-en" placeholder="Enter tag and press Enter">
+                                        <button class="btn btn-primary" type="button" onclick="addTag('en')">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                    <div class="tag-container" id="tags-en"></div>
+
+                                    <div class="input-group mb-2" style="display: none;" id="tag-group-zh-CN">
+                                        <input type="text" class="form-control" id="tag-input-zh-CN" placeholder="输入标签">
+                                        <button class="btn btn-primary" type="button" onclick="addTag('zh-CN')">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                    <div class="tag-container" id="tags-zh-CN" style="display: none;"></div>
+
+                                    <div class="input-group mb-2" style="display: none;" id="tag-group-zh-TW">
+                                        <input type="text" class="form-control" id="tag-input-zh-TW" placeholder="輸入標籤">
+                                        <button class="btn btn-primary" type="button" onclick="addTag('zh-TW')">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                    <div class="tag-container" id="tags-zh-TW" style="display: none;"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Course Thumbnail Video</label>
+                                    <div class="file-upload-area" onclick="document.getElementById('preview-video').click()">
+                                        <div class="file-upload-icon">
+                                            <i class="fas fa-cloud-upload-alt"></i>
+                                        </div>
+                                        <p class="mb-1">Click to upload Video</p>
+                                        
+                                    </div>
+                                    <input type="file" id="preview-video" accept="video/*" style="display: none;">
+                                    <!-- <img id="preview-img-thumbnail"  alt="Thumbnail Preview" class="img-fluid mt-2" style="max-height: 150px; display: none;" /> -->
+                                </div>
+                                <!-- <div class="form-group">
+                                    <label class="form-label">Preview Video URL</label>
+                                    <input type="url" class="form-control" id="preview-video" placeholder="https://example.com/video.mp4">
+                                </div> -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section" id="step-3">
+                        <h2 class="section-title">Sample Reviews</h2>
+                        <p class="section-subtitle">Add sample reviews and testimonials for your course</p>
+
+                        <div class="form-group">
+                            <label class="form-label">Sample Reviews</label>
+                            <button class="btn btn-primary mb-3" onclick="addReview()">
+                                <i class="fas fa-plus me-2"></i>Add Review
+                            </button>
+                            <div id="reviews-container">
+                                <!-- Reviews will be added here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Publish Course -->
+                    <div class="form-section" id="step-4">
+                        <h2 class="section-title">Course Preview</h2>
+                        <p class="section-subtitle">Review your course before publishing</p>
+
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="course-preview">
+                                    <img  alt="Course Thumbnail" class="preview-thumbnail" id="preview-thumbnail">
+                                    <h3 class="preview-title" id="preview-title">Course Title</h3>
+                                    <p class="text-muted mb-3" id="preview-subtitle">Course subtitle will appear here</p>
+                                    <div class="preview-price mb-3" id="preview-price">$0.00</div>
+                                    <div class="mb-3">
+                                        <h6>Learning Objectives:</h6>
+                                        <ul id="preview-objectives" class="text-muted">
+                                            <!-- Objectives will be listed here -->
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h6>Course Content:</h6>
+                                        <div id="preview-lessons" class="text-muted">
+                                            <!-- Lessons will be listed here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="course-preview">
+                                    <h6 class="mb-3">Course Statistics</h6>
+                                    <div class="mb-2">
+                                        <strong>Total Lessons:</strong>
+                                        <span id="total-lessons">0</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Free Lessons:</strong>
+                                        <span id="free-lessons">0</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Total Duration:</strong>
+                                        <span id="total-duration">0:00</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Languages:</strong>
+                                        <span>EN, 中文</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Buttons -->
+                    <div class="wizard-navigation">
+                        <button class="btn btn-outline-primary" id="prev-btn" onclick="previousStep()" style="display: none;">
+                            <i class="fas fa-arrow-left me-2"></i>Previous
+                        </button>
+                        <button class="btn btn-primary" id="next-btn" onclick="nextStep()">
+                            Next <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEW COURSES LIST SECTION -->
+            <div class="page-section" id="courses-list-section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="h2 mb-1">Courses Management</h1>
+                        <p class="text-muted">Manage your course catalog</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="createNewCourse()">
+                        <i class="fas fa-plus me-2"></i>Create New Course
+                    </button>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" style="color: var(--primary-color);" id="total-courses">0</div>
+                        <div class="stat-label">Total Courses</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" style="color: var(--success-color);" id="published-courses">0</div>
+                        <div class="stat-label">Published</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" style="color: var(--warning-color);" id="draft-courses">0</div>
+                        <div class="stat-label">Drafts</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" style="color: #9C27B0;" id="total-students">0</div>
+                        <div class="stat-label">Total Students</div>
+                    </div>
+                </div>
+
+                <!-- Search and Filter -->
+                <!-- <div class="search-filter">
+                    <input type="text" class="search-input" placeholder="Search courses..." id="search-input" onkeyup="filterCourses()">
+                    <select class="filter-select" id="status-filter" onchange="filterCourses()">
+                        <option value="all">All Status</option>
+                        <option value="published">Published</option>
+                        <option value="draft">Draft</option>
+                    </select>
+                    <button class="btn btn-outline-primary" onclick="loadCourses()">
+                        <i class="fas fa-refresh me-2"></i>Refresh
+                    </button>
+                </div> -->
+
+                <!-- Courses Table -->
+                <div class="form-container">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <!-- <h5 class="mb-0">Courses (<span id="courses-count">0</span>)</h5> -->
+                            <div id="loading-indicator" style="display: none;">
+                                <div class="loading-spinner"></div>
+                                <span class="ms-2">Loading courses...</span>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="courses-table" id="courses-table">
+                                <thead>
+                                    <tr>
+                                        <th>Course</th>
+                                        <th>Price</th>
+                                        <th>No. of Lessons</th>
+                                        
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="courses-tbody">
+                                    <!-- Courses will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <script>
+        const API_CONFIG = {
+            PUBLISH_URL: 'https://jacobpersonal.onrender.com/admin/api/courses',
+            COURSES_LIST_URL: 'https://08ed-2400-adc5-432-5b00-2d06-69d6-b103-f5dd.ngrok-free.app/admin/api/courses'
+        };
+
+        // Global variables
+        let currentStep = 1;
+        let totalSteps = 4;
+        let courseData = {
+            title: { en: '', 'zh-CN': '', 'zh-TW': '' },
+            subtitle: { en: '', 'zh-CN': '', 'zh-TW': '' },
+            price: 0,
+            preview_video: '',
+            thumbnail: '',
+            full_details: {
+                content: [],
+                reviews: {},
+                tags: { en: [], 'zh-CN': [], 'zh-TW': [] }
+            },
+            lessons: {}
+        };
+        let quillEditors = {};
+        let lessonCount = 0;
+        let reviewCount = 0;
+        let coursesListData = [];
+        let currentEditingCourse = null;
+        let currentMode = 'create'; // 'create', 'edit', 'view'
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeQuillEditors();
+            setupEventListeners();
+            updateStepDisplay();
+        });
+
+        // NEW FUNCTIONS FOR COURSES LIST
+        function showSection(section) {
+            // Remove active class from all menu items
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            
+            // Hide all page sections
+            document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
+            
+            if (section === 'courses') {
+                document.getElementById('course-creation-section').classList.add('active');
+                document.getElementById('menu-publish').classList.add('active');
+                document.getElementById('breadcrumb-text').textContent = 'Create Course';
+                currentMode = 'create';
+                clearFormData();
+            } else if (section === 'courses-list') {
+                document.getElementById('courses-list-section').classList.add('active');
+                document.getElementById('menu-list').classList.add('active');
+                document.getElementById('breadcrumb-text').textContent = 'Courses List';
+                loadCourses();
+            }
+        }
+
+      async function loadCourses() {
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const tbody = document.getElementById('courses-tbody');
+
+    loadingIndicator.style.display = 'flex';
+    tbody.innerHTML = '';
+
+    try {
+        const token = sessionStorage.getItem('authToken');
+        // Replace with your actual API URL
+        const response = await fetch('https://jacobpersonal.onrender.com/api/admin/courses', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Assuming your API response returns an array of course objects
+        coursesListData = data;
+
+        renderCoursesTable();
+        updateCoursesStats();
+
+    } catch (error) {
+        console.error('Error loading courses:', error);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error loading courses: ${error.message}
+                </td>
+            </tr>
+        `;
+    } finally {
+        loadingIndicator.style.display = 'none';
+    }
+}
+
+
+
+   function renderCoursesTable() {
+        const tbody = document.getElementById('courses-tbody');
+       
+        tbody.innerHTML = ''; // Clear old rows
+
+        if (!coursesListData.length) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center text-muted">No courses found.</td>
+                </tr>
+            `;
+         
+            return;
+        }
+
+       
+
+        coursesListData.forEach(course => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <div class="course-info d-flex align-items-center">
+                        <div class="course-details">
+                            <h6 class="mb-0">${course.title || 'Untitled Course'}</h6>
+                            <p class="mb-0 text-muted">No description available</p>
+                        </div>
+                    </div>
+                </td>
+                <td><span class="price">$${course.price || 0}</span></td>
+                <td>${course.number_of_lessons || 0}</td>
+             <td>
+  <div class="btn-group">
+    <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+      Actions
+    </button>
+    <ul class="dropdown-menu">
+      <li>
+        <a class="dropdown-item" href="#" onclick="viewCourse('${course.course_id}')">
+          <i class="fas fa-eye me-2"></i>View Course
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item" href="#" onclick="editCourse('${course.course_id}')">
+          <i class="fas fa-edit me-2"></i>Edit Course
+        </a>
+      </li>
+      <li><hr class="dropdown-divider"></li>
+      <li>
+        <a class="dropdown-item" href="#" onclick="openLessonModal('${course.course_id}', 'add')">
+          <i class="fas fa-plus me-2"></i>Add Lessons
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item" href="#" onclick="openLessonModal('${course.course_id}', 'edit')">
+          <i class="fas fa-video me-2"></i>Edit Lessons
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item" href="#" onclick="openLessonModal('${course.course_id}', 'view')">
+          <i class="fas fa-eye me-2"></i>View Lessons
+        </a>
+      </li>
+      <li><hr class="dropdown-divider"></li>
+      <li>
+        <a class="dropdown-item text-danger" href="#" onclick="deleteCourse('${course.course_id}')">
+          <i class="fas fa-trash me-2"></i>Delete
+        </a>
+      </li>
+    </ul>
+  </div>
+</td>
+
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+function openLessonModal(courseId, mode) {
+  const course = coursesListData.find(c => c.course_id === courseId);
+  if (!course) return alert('Course not found');
+
+  currentLessonCourseId = courseId;
+  lessonCount = 0;
+
+  const modalTitle = document.getElementById('lessonModalLabel');
+  const lessonsContainer = document.getElementById('lessons-container');
+  lessonsContainer.innerHTML = '';
+
+  const lessonModal = new bootstrap.Modal(document.getElementById('lessonModal'));
+  lessonModal.show();
+
+  const storedLessons = localStorage.getItem(`lessons_${courseId}`);
+  const lessons = storedLessons ? JSON.parse(storedLessons) : course.lessons || [];
+
+  if (mode === 'add') {
+    modalTitle.textContent = `Add Lessons to: ${course.title || 'Untitled'}`;
+    addLesson();
+    toggleLessonInputs(false);
+    showLessonModalFooter(true);
+  } else if (mode === 'edit') {
+    modalTitle.textContent = `Edit Lessons for: ${course.title || 'Untitled'}`;
+    lessons.forEach(lesson => addLesson(lesson));
+    toggleLessonInputs(false);
+    showLessonModalFooter(true);
+  } else if (mode === 'view') {
+    modalTitle.textContent = `View Lessons for: ${course.title || 'Untitled'}`;
+    lessons.forEach(lesson => addLesson(lesson, true));
+    toggleLessonInputs(true);
+    showLessonModalFooter(false);
+  }
+}
+
+
+function toggleLessonInputs(readOnly) {
+  const container = document.getElementById('lessons-container');
+  container.querySelectorAll('input, textarea').forEach(input => {
+    input.disabled = readOnly;
+  });
+  if(readOnly){
+  container.querySelector('.btn-danger')?.remove();
+const editBtn = container.querySelector('.btn-warning');
+if(editBtn){
+    editBtn.innerHTML = '<i class="fas fa-chevron-down"></i> Expand';
+}
+  }
+
+  container.querySelectorAll('.lesson-actions button').forEach(btn => {
+    btn.style.display = readOnly ? 'block' : 'inline-block';
+  });
+
+  document.getElementById('add-lesson-btn').style.display = readOnly ? 'none' : 'inline-block';
+}
+
+function showLessonModalFooter(show) {
+  document.querySelector('#lessonModal .modal-footer').style.display = show ? 'flex' : 'none';
+}
+
+
+
+
+
+        function updateCoursesStats() {
+            const totalCourses = coursesListData.length;
+            const publishedCourses = coursesListData.filter(c => c.status === 'published').length;
+            const draftCourses = coursesListData.filter(c => c.status === 'draft').length;
+            const totalStudents = coursesListData.reduce((sum, c) => sum + (c.students || 0), 0);
+
+            document.getElementById('total-courses').textContent = totalCourses;
+            document.getElementById('published-courses').textContent = publishedCourses;
+            document.getElementById('draft-courses').textContent = draftCourses;
+            document.getElementById('total-students').textContent = totalStudents;
+            // document.getElementById('courses-count').textContent = totalCourses;
+        }
+
+        // function filterCourses() {
+        //     const searchTerm = document.getElementById('search-input').value.toLowerCase();
+        //     const statusFilter = document.getElementById('status-filter').value;
+            
+        //     const filteredCourses = coursesListData.filter(course => {
+        //         const matchesSearch = (course.title?.en || '').toLowerCase().includes(searchTerm) || 
+        //                             (course.subtitle?.en || '').toLowerCase().includes(searchTerm);
+        //         const matchesStatus = statusFilter === 'all' || course.status === statusFilter;
+        //         return matchesSearch && matchesStatus;
+        //     });
+
+        //     // Re-render table with filtered data
+        //     const tbody = document.getElementById('courses-tbody');
+        //     tbody.innerHTML = '';
+
+        //     filteredCourses.forEach(course => {
+        //         const row = document.createElement('tr');
+        //         row.innerHTML = `
+        //             <td>
+        //                 <div class="course-info">
+        //                     <img src="${course.thumbnail || 'https://via.placeholder.com/60x40/4285F4/ffffff?text=COURSE'}" 
+        //                          alt="${course.title?.en || 'Course'}" class="course-thumbnail">
+        //                     <div class="course-details">
+        //                         <h6>${course.title?.en || 'Untitled Course'}</h6>
+        //                         <p>${course.subtitle?.en || 'No description available'}</p>
+        //                     </div>
+        //                 </div>
+        //             </td>
+        //             <td><span class="price">$${course.price || 0}</span></td>
+        //             <td><span class="status-badge status-${course.status || 'draft'}">${(course.status || 'draft').charAt(0).toUpperCase() + (course.status || 'draft').slice(1)}</span></td>
+        //             <td>${course.created_at ? new Date(course.created_at).toLocaleDateString() : 'N/A'}</td>
+        //             <td>
+        //                 <div class="action-buttons">
+        //                     <button class="btn-action btn-view" onclick="viewCourse('${course.id}')">
+        //                         <i class="fas fa-eye"></i> View
+        //                     </button>
+        //                     <button class="btn-action btn-edit" onclick="editCourse('${course.id}')">
+        //                         <i class="fas fa-edit"></i> Edit
+        //                     </button>
+        //                     <button class="btn-action btn-delete" onclick="deleteCourse('${course.id}')">
+        //                         <i class="fas fa-trash"></i> Delete
+        //                     </button>
+        //                 </div>
+        //             </td>
+        //         `;
+        //         tbody.appendChild(row);
+        //     });
+
+        //     document.getElementById('courses-count').textContent = filteredCourses.length;
+        // }
+
+        function viewCourse(courseId) {
+            const course = coursesListData.find(c => c.id === courseId);
+            if (course) {
+                currentEditingCourse = course;
+                currentMode = 'view';
+                populateFormWithCourseData(course);
+                showSection('courses');
+                document.getElementById('breadcrumb-text').textContent = `View Course: ${course.title?.en || 'Untitled'}`;
+                
+                // Make form read-only
+                setFormReadOnly(true);
+            }
+        }
+
+        function editCourse(courseId) {
+            const course = coursesListData.find(c => c.course_id === courseId);
+            if (course) {
+                currentEditingCourse = course;
+                currentMode = 'edit';
+                populateFormWithCourseData(course);
+                showSection('courses');
+                document.getElementById('breadcrumb-text').textContent = `Edit Course: ${course.title || 'Untitled'}`;
+                
+                // Make form editable
+                setFormReadOnly(false);
+            }
+        }
+
+        async function deleteCourse(courseId) {
+            if (!confirm('Are you sure you want to delete this course? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const token = sessionStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('Authentication token not found. Please log in again.');
+                }
+
+                const response = await fetch(`${API_CONFIG.COURSES_LIST_URL}/${courseId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete course');
+                }
+
+                alert('Course deleted successfully!');
+                loadCourses(); // Reload the courses list
+
+            } catch (error) {
+                console.error('Error deleting course:', error);
+                alert('Error deleting course: ' + error.message);
+            }
+        }
+
+        function createNewCourse() {
+            currentEditingCourse = null;
+            currentMode = 'create';
+            clearFormData();
+            showSection('courses');
+            document.getElementById('breadcrumb-text').textContent = 'Create New Course';
+            setFormReadOnly(false);
+        }
+
+        function populateFormWithCourseData(course) {
+                
+            document.getElementById('title-en').value = course.title?.en || '';
+            document.getElementById('title-zh-CN').value = course.title?.['zh-CN'] || '';
+            document.getElementById('title-zh-TW').value = course.title?.['zh-TW'] || '';
+
+            // Populate subtitle fields
+            document.getElementById('subtitle-en').value = course.subtitle?.en || '';
+            document.getElementById('subtitle-zh-CN').value = course.subtitle?.['zh-CN'] || '';
+            document.getElementById('subtitle-zh-TW').value = course.subtitle?.['zh-TW'] || '';
+
+            // Populate price
+            document.getElementById('price').value = course.price || '';
+
+            // Populate preview video
+            document.getElementById('preview-video').value = course.preview_video || '';
+
+            // Show thumbnail if available
+            if (course.thumbnail) {
+                const previewImg = document.getElementById('preview-img-thumbnail');
+                previewImg.src = course.thumbnail;
+                previewImg.style.display = 'block';
+            }
+
+            // Populate tags
+            if (course.full_details?.tags) {
+                ['en', 'zh-CN', 'zh-TW'].forEach(lang => {
+                    const tags = course.full_details.tags[lang] || [];
+                    const container = document.getElementById(`tags-${lang}`);
+                    container.innerHTML = '';
+                    tags.forEach(tag => {
+                        const tagElement = document.createElement('span');
+                        tagElement.className = 'tag';
+                        tagElement.innerHTML = `
+                            ${tag}
+                            <span class="tag-remove" onclick="removeTag('${lang}', '${tag}', this)">
+                                <i class="fas fa-times"></i>
+                            </span>
+                        `;
+                        container.appendChild(tagElement);
+                    });
+                });
+            }
+        }
+
+        function setFormReadOnly(readOnly) {
+            const formControls = document.querySelectorAll('.form-control, .form-select');
+            formControls.forEach(control => {
+                control.readOnly = readOnly;
+                if (readOnly) {
+                    control.style.backgroundColor = '#f8f9fa';
+                } else {
+                    control.style.backgroundColor = '';
+                }
+            });
+
+            // Disable/enable buttons
+            const buttons = document.querySelectorAll('.btn-primary, .lang-tab');
+            buttons.forEach(button => {
+                button.disabled = readOnly;
+            });
+
+            // Hide/show navigation buttons based on mode
+            const navButtons = document.querySelector('.wizard-navigation');
+            if (currentMode === 'view') {
+                navButtons.style.display = 'none';
+            } else {
+                navButtons.style.display = 'flex';
+            }
+        }
+
+        function clearFormData() {
+            // Clear all form fields
+            document.getElementById('title-en').value = '';
+            document.getElementById('title-zh-CN').value = '';
+            document.getElementById('title-zh-TW').value = '';
+            document.getElementById('subtitle-en').value = '';
+            document.getElementById('subtitle-zh-CN').value = '';
+            document.getElementById('subtitle-zh-TW').value = '';
+            document.getElementById('price').value = '';
+            document.getElementById('preview-video').value = '';
+            
+            // Clear thumbnail preview
+            const previewImg = document.getElementById('preview-img-thumbnail');
+            previewImg.style.display = 'none';
+            previewImg.src = '';
+
+            // Clear tags
+            ['en', 'zh-CN', 'zh-TW'].forEach(lang => {
+                document.getElementById(`tags-${lang}`).innerHTML = '';
+            });
+
+            // Clear reviews
+            document.getElementById('reviews-container').innerHTML = '';
+
+            // Reset step to 1
+            currentStep = 1;
+            updateStepDisplay();
+        }
+
+        // EXISTING FUNCTIONS (unchanged)
+        function initializeQuillEditors() {
+            const languages = ['en', 'zh-CN', 'zh-TW'];
+            languages.forEach(lang => {
+                const editorElement = document.getElementById(`description-editor-${lang}`);
+                if (editorElement) {
+                    quillEditors[`description-${lang}`] = new Quill(`#description-editor-${lang}`, {
+                        theme: 'snow',
+                        placeholder: 'Enter course description...',
+                        modules: {
+                            toolbar: [
+                                ['bold', 'italic', 'underline'],
+                                ['blockquote', 'code-block'],
+                                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                ['link', 'image'],
+                                ['clean']
+                            ]
+                        }
+                    });
+                }
+            });
+        }
+
+        function setupEventListeners() {
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('lang-tab')) {
+                    switchLanguageTab(e.target);
+                }
+            });
+
+            const courseId = 'test';
+            const thumbnailUpload = document.getElementById('thumbnail-upload');
+            const thumbnailUploadVideo = document.getElementById('preview-video');
+            if (thumbnailUpload) {
+                thumbnailUpload.addEventListener('change', function(e) {
+                    handleFileUpload(e, courseId,'thumbnail');
+                });
+            }
+if (thumbnailUploadVideo) {
+                thumbnailUploadVideo.addEventListener('change', function(e) {
+                    handleFileUpload(e, courseId,'preview_video');
+                });
+            }
+            document.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && e.target.id.includes('tag-input')) {
+                    const lang = e.target.id.split('-')[2];
+                    addTag(lang);
+                }
+            });
+        }
+
+        function switchLanguageTab(clickedTab) {
+            const container = clickedTab.closest('.form-group');
+            const lang = clickedTab.dataset.lang;
+            
+            container.querySelectorAll('.lang-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            clickedTab.classList.add('active');
+
+            const inputs = container.querySelectorAll('input, textarea, div[id*="editor"]');
+            inputs.forEach(input => {
+                if (input.id && input.id.includes(lang)) {
+                    input.style.display = 'block';
+                } else if (input.id && (input.id.includes('-en') || input.id.includes('-zh-CN') || input.id.includes('-zh-TW'))) {
+                    input.style.display = 'none';
+                }
+            });
+            
+            const containers = container.querySelectorAll('div[id*="container"], div[id*="group"]');
+            containers.forEach(cont => {
+                if (cont.id && cont.id.includes(lang)) {
+                    cont.style.display = 'block';
+                } else if (cont.id && (cont.id.includes('-en') || cont.id.includes('-zh-CN') || cont.id.includes('-zh-TW'))) {
+                    cont.style.display = 'none';
+                }
+            });
+        }
+
+        async function handleFileUpload(event, courseId, fileType) {
+    const file = event.target.files[0];
+    if (!file || !courseId || !fileType) return;
+
+    const formData = new FormData();
+
+    // Append the correct file field based on the type
+    if (fileType === 'thumbnail') {
+        formData.append('thumbnail', file);
+    } else if (fileType === 'preview_video') {
+        formData.append('preview_video', file);
+    } else {
+        console.error('Invalid fileType provided');
+        return;
+    }
+
+    const token = sessionStorage.getItem('authToken');
+    if (!token) {
+        alert('Auth token missing. Please log in again.');
+        return;
+    }
+
+    const nextBtn = document.getElementById('next-btn');
+    nextBtn.disabled = true;
+    nextBtn.innerHTML = `Uploading... <span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>`;
+
+    try {
+        const response = await fetch(`https://jacobpersonal.onrender.com/admin/api/courses/${courseId}/upload-assets`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to upload ${fileType}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+            if (result.data?.thumbnail_key) {
+                courseData.thumbnail_key = result.data.thumbnail_key;
+
+                // Show thumbnail preview
+                if (fileType === 'thumbnail') {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const previewImg = document.getElementById('preview-img-thumbnail');
+                        previewImg.src = e.target.result;
+                        previewImg.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            if (result.data?.preview_video_key) {
+                courseData.preview_video_key = result.data.preview_video_key;
+
+                // Optional: Show video preview
+                // if (fileType === 'preview_video') {
+                //     const videoPreview = document.getElementById('preview-video');
+                //     const videoURL = URL.createObjectURL(file);
+                //     videoPreview.src = videoURL;
+                //     videoPreview.style.display = 'block';
+                // }
+            }
+        } else {
+            throw new Error('Upload succeeded but no file key received');
+        }
+
+    } catch (error) {
+        console.error('Upload error:', error);
+        alert(error.message || 'Upload failed');
+    } finally {
+        nextBtn.disabled = false;
+        nextBtn.innerHTML = `Next <i class="fas fa-arrow-right ms-2"></i>`;
+    }
+}
+
+
+        function addObjective(lang) {
+            const container = document.getElementById(`objectives-container-${lang}`);
+            if (!container) return;
+            
+            const input = container.querySelector('input');
+            const objective = input.value.trim();
+            
+            // if (objective) {
+            //     const objectiveDiv = document.createElement('div');
+            //     objectiveDiv
+            //     const objectiveDiv = document.createElement('div');
+            //     objectiveDiv.className = 'input-group mb-2';
+            //     objectiveDiv.innerHTML = `
+            //         <input type="text" class="form-control" value="${objective}" readonly>
+            //         <button class="btn btn-danger" type="button" onclick="this.parentElement.remove()">
+            //             <i class="fas fa-trash"></i>
+            //         </button>
+            //     `;
+            //     container.insertBefore(objectiveDiv, container.lastElementChild);
+            //     input.value = '';
+            // }
+        }
+
+     function addLesson(lessonData = null, readOnly = false) {
+  lessonCount++;
+  const lessonsContainer = document.getElementById('lessons-container');
+  
+  const idSuffix = lessonCount;
+  const title = lessonData?.title || {};
+  const content = lessonData?.content || {};
+  const video = lessonData?.video || '';
+  const duration = lessonData?.duration || '';
+  const isFree = lessonData?.isFree || false;
+
+  const lessonDiv = document.createElement('div');
+  lessonDiv.className = 'lesson-item';
+  lessonDiv.innerHTML = `
+    <div class="lesson-header">
+      <h6 class="lesson-title mb-0">Lesson ${idSuffix}</h6>
+      <div class="lesson-actions">
+        <button class="btn btn-warning btn-sm" onclick="toggleLessonContent(this)">
+          <i class="fas fa-edit"></i> Edit
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="removeLesson(this)">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="lesson-content" style="display: none;">
+      <div class="form-group">
+        <label class="form-label">Lesson Title</label>
+        <div class="language-tabs">
+          <button class="lang-tab active" data-lang="en">English</button>
+          <button class="lang-tab" data-lang="zh-CN">简体中文</button>
+          <button class="lang-tab" data-lang="zh-TW">繁體中文</button>
+        </div>
+        <input type="text" class="form-control mb-2" id="lesson-title-en-${idSuffix}" value="${title.en || ''}">
+        <input type="text" class="form-control mb-2" id="lesson-title-zh-CN-${idSuffix}" value="${title['zh-CN'] || ''}" style="display:none;">
+        <input type="text" class="form-control mb-2" id="lesson-title-zh-TW-${idSuffix}" value="${title['zh-TW'] || ''}" style="display:none;">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Lesson Content</label>
+        <div class="language-tabs">
+          <button class="lang-tab active" data-lang="en">English</button>
+          <button class="lang-tab" data-lang="zh-CN">简体中文</button>
+          <button class="lang-tab" data-lang="zh-TW">繁體中文</button>
+        </div>
+        <textarea class="form-control mb-2" id="lesson-content-en-${idSuffix}">${content.en || ''}</textarea>
+        <textarea class="form-control mb-2" id="lesson-content-zh-CN-${idSuffix}" style="display:none;">${content['zh-CN'] || ''}</textarea>
+        <textarea class="form-control mb-2" id="lesson-content-zh-TW-${idSuffix}" style="display:none;">${content['zh-TW'] || ''}</textarea>
+      </div>
+
+      <div class="row">
+        <div class="col-md-4">
+          <label class="form-label">Video URL</label>
+          <input type="url" class="form-control" id="lesson-video-${idSuffix}" value="${video}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Duration</label>
+          <input type="text" class="form-control" id="lesson-duration-${idSuffix}" value="${duration}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Settings</label>
+          <div class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" id="free-lesson-${idSuffix}" ${isFree ? 'checked' : ''}>
+            <label class="form-check-label" for="free-lesson-${idSuffix}">
+              <i class="fas fa-unlock me-1"></i> Free Lesson
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  lessonsContainer.appendChild(lessonDiv);
+
+  // Handle language tab switching
+  const tabs = lessonDiv.querySelectorAll('.lang-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', function () {
+      tabs.forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+
+      const lang = this.dataset.lang;
+      const inputs = lessonDiv.querySelectorAll(`input[id^="lesson-title-"], textarea[id^="lesson-content-"]`);
+      inputs.forEach(input => {
+        input.style.display = input.id.includes(lang) ? 'block' : 'none';
+      });
+    });
+  });
+
+
+}
+
+function saveLessons() {
+  const lessons = [];
+  const container = document.getElementById('lessons-container');
+
+  container.querySelectorAll('.lesson-item').forEach((lessonDiv, index) => {
+    const suffix = index + 1;
+
+    const title = {
+      en: document.getElementById(`lesson-title-en-${suffix}`)?.value.trim() || '',
+      'zh-CN': document.getElementById(`lesson-title-zh-CN-${suffix}`)?.value.trim() || '',
+      'zh-TW': document.getElementById(`lesson-title-zh-TW-${suffix}`)?.value.trim() || ''
+    };
+
+    const content = {
+      en: document.getElementById(`lesson-content-en-${suffix}`)?.value.trim() || '',
+      'zh-CN': document.getElementById(`lesson-content-zh-CN-${suffix}`)?.value.trim() || '',
+      'zh-TW': document.getElementById(`lesson-content-zh-TW-${suffix}`)?.value.trim() || ''
+    };
+
+    const video = document.getElementById(`lesson-video-${suffix}`)?.value.trim() || '';
+    const duration = document.getElementById(`lesson-duration-${suffix}`)?.value.trim() || '';
+    const isFree = document.getElementById(`free-lesson-${suffix}`)?.checked || false;
+
+    lessons.push({ title, content, video, duration, isFree });
+  });
+
+  localStorage.setItem(`lessons_${currentLessonCourseId}`, JSON.stringify(lessons));
+  alert('Lessons saved successfully!');
+}
+
+
+   function toggleLessonContent(button) {
+  const lessonItem = button.closest('.lesson-item');
+  const content = lessonItem.querySelector('.lesson-content');
+  const icon = button.querySelector('i');
+
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    button.innerHTML = '<i class="fas fa-chevron-up"></i> Collapse';
+  } else {
+    content.style.display = 'none';
+    button.innerHTML = '<i class="fas fa-chevron-down"></i> Expand';
+  }
+}
+
+
+
+        function removeLesson(button) {
+            if (confirm('Are you sure you want to remove this lesson?')) {
+                button.closest('.lesson-item').remove();
+            }
+        }
+
+        function addTag(lang) {
+            const input = document.getElementById(`tag-input-${lang}`);
+            const container = document.getElementById(`tags-${lang}`);
+            const tag = input.value.trim();
+            
+            if (tag && !courseData.full_details.tags[lang].includes(tag)) {
+                courseData.full_details.tags[lang].push(tag);
+                
+                const tagElement = document.createElement('span');
+                tagElement.className = 'tag';
+                tagElement.innerHTML = `
+                    ${tag}
+                    <span class="tag-remove" onclick="removeTag('${lang}', '${tag}', this)">
+                        <i class="fas fa-times"></i>
+                    </span>
+                `;
+                
+                container.appendChild(tagElement);
+                input.value = '';
+            }
+        }
+
+        function removeTag(lang, tag, element) {
+            const index = courseData.full_details.tags[lang].indexOf(tag);
+            if (index > -1) {
+                courseData.full_details.tags[lang].splice(index, 1);
+            }
+            element.parentElement.remove();
+        }
+
+        function addReview() {
+            reviewCount++;
+            const container = document.getElementById('reviews-container');
+            
+            const reviewDiv = document.createElement('div');
+            reviewDiv.className = 'lesson-item mb-3';
+            reviewDiv.innerHTML = `
+                <div class="lesson-header">
+                    <h6 class="mb-0">Review ${reviewCount}</h6>
+                    <button class="btn btn-danger btn-sm" onclick="this.closest('.lesson-item').remove()">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="lesson-content" style="display: block;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Reviewer Name</label>
+                                <input type="text" class="form-control" placeholder="Enter reviewer name">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Rating</label>
+                                <select class="form-select">
+                                    <option value="5">5 Stars</option>
+                                    <option value="4">4 Stars</option>
+                                    <option value="3">3 Stars</option>
+                                    <option value="2">2 Stars</option>
+                                    <option value="1">1 Star</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Review Comment</label>
+                        <textarea class="form-control" rows="3" placeholder="Enter review comment"></textarea>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(reviewDiv);
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                if (validateCurrentStep()) {
+                    currentStep++;
+                    updateStepDisplay();
+                    if (currentStep === totalSteps) {
+                        updatePreview();
+                    }
+                }
+            } else {
+                publishCourse();
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStepDisplay();
+            }
+        }
+
+        function updateStepDisplay() {
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            document.getElementById(`step-${currentStep}`).classList.add('active');
+            
+            document.querySelectorAll('.step').forEach((step, index) => {
+                step.classList.remove('active', 'completed');
+                if (index + 1 < currentStep) {
+                    step.classList.add('completed');
+                } else if (index + 1 === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+            
+            const progressPercentage = ((currentStep - 1) / (totalSteps - 1)) * 100;
+            document.getElementById('progress-line-active').style.width = progressPercentage + '%';
+            
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            prevBtn.style.display = currentStep > 1 ? 'block' : 'none';
+            
+            if (currentStep === totalSteps) {
+                nextBtn.innerHTML = '<i class="fas fa-rocket me-2"></i>Publish Course';
+                nextBtn.className = 'btn btn-success';
+            } else {
+                nextBtn.innerHTML = 'Next<i class="fas fa-arrow-right ms-2"></i>';
+                nextBtn.className = 'btn btn-primary';
+            }
+        }
+
+        function validateCurrentStep() {
+            if (currentStep === 1) {
+                const titleEn = document.getElementById('title-en').value.trim();
+                const titleZhCN = document.getElementById('title-zh-CN').value.trim();
+                const titleZhTW = document.getElementById('title-zh-TW').value.trim();
+
+                if (!titleEn || !titleZhCN || !titleZhTW) {
+                    alert('Please enter the course title in all languages.');
+                    return false;
+                }
+
+                const subtitleEn = document.getElementById('subtitle-en').value.trim();
+                const subtitleZhCN = document.getElementById('subtitle-zh-CN').value.trim();
+                const subtitleZhTW = document.getElementById('subtitle-zh-TW').value.trim();
+
+                if (!subtitleEn || !subtitleZhCN || !subtitleZhTW) {
+                    alert('Please enter the course subtitle in all languages.');
+                    return false;
+                }
+
+                const price = document.getElementById('price').value;
+                if (price.trim() === '' || isNaN(price) || Number(price) < 0) {
+                    alert('Please enter a valid course price.');
+                    return false;
+                }
+
+                const thumbnail = document.getElementById('thumbnail-upload').files[0];
+                if (!thumbnail && currentMode === 'create') {
+                    alert('Please upload a course thumbnail.');
+                    return false;
+                }
+
+                if (thumbnail) {
+                    const validTypes = ['image/jpeg', 'image/png'];
+                    if (!validTypes.includes(thumbnail.type)) {
+                        alert('Thumbnail must be a JPG or PNG image.');
+                        return false;
+                    }
+
+                    const maxSizeMB = 5;
+                    if (thumbnail.size > maxSizeMB * 1024 * 1024) {
+                        alert('Thumbnail image must be less than 5MB.');
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        function updatePreview() {
+            document.getElementById('preview-title').textContent = 
+                document.getElementById('title-en').value || 'Course Title';
+            document.getElementById('preview-subtitle').textContent = 
+                document.getElementById('subtitle-en').value || 'Course subtitle will appear here';
+            document.getElementById('preview-price').textContent = 
+                '$' + (document.getElementById('price').value || '0.00');
+            
+            const objectivesContainer = document.getElementById('preview-objectives');
+            objectivesContainer.innerHTML = '';
+            document.querySelectorAll('#objectives-container-en input[readonly]').forEach(input => {
+                const li = document.createElement('li');
+                li.textContent = input.value;
+                objectivesContainer.appendChild(li);
+            });
+            
+            const lessons = document.querySelectorAll('.lesson-item');
+            document.getElementById('total-lessons').textContent = lessons.length;
+            
+            let freeLessons = 0;
+            lessons.forEach(lesson => {
+                const checkbox = lesson.querySelector('input[type="checkbox"]');
+                if (checkbox && checkbox.checked) {
+                    freeLessons++;
+                }
+            });
+            document.getElementById('free-lessons').textContent = freeLessons;
+        }
+
+        async function publishCourse() {
+            const courseData = collectFormData();
+            const nextBtn = document.getElementById('next-btn');
+
+            nextBtn.innerHTML = '<span class="loading me-2"></span>Publishing...';
+            nextBtn.disabled = true;
+
+            try {
+                const token = sessionStorage.getItem('authToken');
+
+                // if (!token) {
+                //     throw new Error('Authentication token not found. Please log in again.');
+                // }
+
+                let url = API_CONFIG.PUBLISH_URL;
+                let method = 'POST';
+
+                // If editing, use PUT method and include course ID
+                if (currentMode === 'edit' && currentEditingCourse) {
+                    url = `${API_CONFIG.PUBLISH_URL}/${currentEditingCourse.id}`;
+                    method = 'PUT';
+                }
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(courseData),
+                });
+
+                if (!response.ok) {
+                    const errorDetails = await response.json().catch(() => null);
+                    const message = errorDetails?.message || 'Failed to publish course';
+                    throw new Error(message);
+                }
+
+                const result = await response.json();
+                alert(currentMode === 'edit' ? 'Course updated successfully!' : 'Course published successfully!');
+                console.log('Server Response:', result);
+
+                // Redirect to courses list
+                showSection('courses-list');
+
+            } catch (error) {
+                console.error('Publish error:', error);
+                alert(error.message || 'Failed to publish course. Please try again.');
+            } finally {
+                nextBtn.innerHTML = '<i class="fas fa-rocket me-2"></i>Publish Course';
+                nextBtn.disabled = false;
+            }
+        }
+
+        function collectFormData() {
+            const course_template = {
+                title: {
+                    en: document.getElementById('title-en').value,
+                    'zh-CN': document.getElementById('title-zh-CN').value,
+                    'zh-TW': document.getElementById('title-zh-TW').value
+                },
+                subtitle: {
+                    en: document.getElementById('subtitle-en').value,
+                    'zh-CN': document.getElementById('subtitle-zh-CN').value,
+                    'zh-TW': document.getElementById('subtitle-zh-TW').value
+                },
+                price: parseFloat(document.getElementById('price').value) || 0,
+                preview_video: courseData.preview_video_key || '' ,
+                thumbnail: courseData.thumbnail_key || '',
+                full_details: {
+                    content: [
+                        {
+                            text: {
+                                en: "Welcome to this course!",
+                                'zh-CN': "欢迎参加本课程！",
+                                'zh-TW': "歡迎參加本課程！"
+                            },
+                            type: "p"
+                        },
+                        {
+                            text: {
+                                li1: {
+                                    en: "Understand the basics of the topic.",
+                                    'zh-CN': "了解该主题的基础知识。",
+                                    'zh-TW': "了解該主題的基礎知識。"
+                                },
+                                li2: {
+                                    en: "Gain practical skills through exercises.",
+                                    'zh-CN': "通过练习获得实用技能。",
+                                    'zh-TW': "通過練習獲得實用技能。"
+                                }
+                            },
+                            type: "li"
+                        }
+                    ],
+                    reviews: {},
+                    tags: {
+                        en: ['Programming', 'Technology'],
+                        'zh-CN': ['编程', '技术'],
+                        'zh-TW': ['程式設計', '技術']
+                    }
+                },
+                lessons: {}
+            };
+
+            const reviewItems = document.querySelectorAll('#reviews-container .lesson-item');
+            reviewItems.forEach((reviewItem, index) => {
+                const nameInput = reviewItem.querySelector('input[placeholder*="reviewer name"]');
+                const ratingSelect = reviewItem.querySelector('select');
+                const commentTextarea = reviewItem.querySelector('textarea');
+
+                if (nameInput && ratingSelect && commentTextarea) {
+                    course_template.full_details.reviews[`user_${index + 1}`] = {
+                        name: nameInput.value || '',
+                        comment: {
+                            en: commentTextarea.value || '',
+                            'zh-CN': commentTextarea.value || '',
+                            'zh-TW': commentTextarea.value || ''
+                        },
+                        rating: parseInt(ratingSelect.value) || 5
+                    };
+                }
+            });
+
+            const lessonItems = document.querySelectorAll('.lesson-item');
+            lessonItems.forEach((lesson, index) => {
+                const lessonKey = `lesson_${index + 1}`;
+                const lessonId = index + 1;
+
+                course_template.lessons[lessonKey] = {
+                    title: {
+                        en: document.getElementById(`lesson-title-en-${lessonId}`)?.value || '',
+                        'zh-CN': document.getElementById(`lesson-title-zh-CN-${lessonId}`)?.value || '',
+                        'zh-TW': document.getElementById(`lesson-title-zh-TW-${lessonId}`)?.value || ''
+                    },
+                    content: {
+                        en: document.getElementById(`lesson-content-en-${lessonId}`)?.value || '',
+                        'zh-CN': document.getElementById(`lesson-content-zh-CN-${lessonId}`)?.value || '',
+                        'zh-TW': document.getElementById(`lesson-content-zh-TW-${lessonId}`)?.value || ''
+                    },
+                    video_url: document.getElementById(`lesson-video-${lessonId}`)?.value || '',
+                    video_duration: document.getElementById(`lesson-duration-${lessonId}`)?.value || '',
+                    is_free: document.getElementById(`free-lesson-${lessonId}`)?.checked || false
+                };
+            });
+
+            return {
+                course_template
+            };
+        }
+
+        function saveAsDraft() {
+            collectFormData();
+            
+            const saveBtn = document.querySelector('.btn-save-draft');
+            const originalText = saveBtn.textContent;
+            saveBtn.innerHTML = '<span class="loading me-2"></span>Saving...';
+            saveBtn.disabled = true;
+            
+            setTimeout(() => {
+                alert('Course saved as draft successfully!');
+                console.log('Draft Course Data:', JSON.stringify(courseData, null, 2));
+                
+                saveBtn.textContent = originalText;
+                saveBtn.disabled = false;
+            }, 1500);
+        }
+
+        function publishCourseFromTop() {
+            if (currentStep < totalSteps) {
+                if (confirm('You haven\'t completed all steps. Do you want to publish the course with current data?')) {
+                    collectFormData();
+                    publishCourseAction();
+                }
+            } else {
+                collectFormData();
+                publishCourseAction();
+            }
+        }
+
+        function publishCourseAction() {
+            const publishBtn = document.querySelector('.btn-publish');
+            const originalText = publishBtn.textContent;
+            publishBtn.innerHTML = '<span class="loading me-2"></span>Publishing...';
+            publishBtn.disabled = true;
+            
+            setTimeout(() => {
+                alert('Course published successfully!');
+                console.log('Published Course Data:', JSON.stringify(courseData, null, 2));
+                
+                publishBtn.textContent = originalText;
+                publishBtn.disabled = false;
+            }, 2000);
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            sidebar.classList.toggle('show');
+            if (overlay) {
+                overlay.classList.toggle('show');
+            }
+        }
+    </script>
+</body>
+</html>
