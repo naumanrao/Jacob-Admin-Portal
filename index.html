@@ -1029,7 +1029,88 @@
                     <div class="form-section" id="step-2">
                         <h2 class="section-title">About Course</h2>
                         <p class="section-subtitle">Provide detailed information about your course</p>
+     <div class="form-group">
+                        <label class="form-label">Course Description</label>
+                        <div class="language-tabs">
+                            <button class="lang-tab active" data-lang="en">English</button>
+                            <button class="lang-tab" data-lang="zh-CN">简体中文</button>
+                            <button class="lang-tab" data-lang="zh-TW">繁體中文</button>
+                        </div>
+                       <!-- English -->
+<div class="row mb-3" id="row-en">
+  <div class="col-md-6">
+    <label for="description-en" class="form-label">Description (English)</label>
+    <textarea class="form-control" id="description-en" rows="4" placeholder="Enter course description..."></textarea>
+  </div>
+  <div class="col-md-6">
+    <label for="dropdown-en" class="form-label">Select Option</label>
+    <select class="form-control" id="dropdown-en">
+      <!-- Options will be appended via API -->
+    </select>
+  </div>
+</div>
 
+<!-- Simplified Chinese -->
+<div class="row mb-3" id="row-zh-CN" style="display: none;">
+  <div class="col-md-6">
+    <label for="description-zh-CN" class="form-label">Description (简体中文)</label>
+    <textarea class="form-control" id="description-zh-CN" rows="4" placeholder="输入课程描述..."></textarea>
+  </div>
+  <div class="col-md-6">
+    <label for="dropdown-zh-CN" class="form-label">Select Option</label>
+    <select class="form-control" id="dropdown-zh-CN">
+      <!-- Options will be appended via API -->
+    </select>
+  </div>
+</div>
+
+<!-- Traditional Chinese -->
+<div class="row mb-3" id="row-zh-TW" style="display: none;">
+  <div class="col-md-6">
+    <label for="description-zh-TW" class="form-label">Description (繁體中文)</label>
+    <textarea class="form-control" id="description-zh-TW" rows="4" placeholder="輸入課程描述..."></textarea>
+  </div>
+  <div class="col-md-6">
+    <label for="dropdown-zh-TW" class="form-label">Select Option</label>
+    <select class="form-control" id="dropdown-zh-TW">
+      <!-- Options will be appended via API -->
+    </select>
+  </div>
+</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Learning Objectives</label>
+                        <div class="language-tabs">
+                            <button class="lang-tab active" data-lang="en">English</button>
+                            <button class="lang-tab" data-lang="zh-CN">简体中文</button>
+                            <button class="lang-tab" data-lang="zh-TW">繁體中文</button>
+                        </div>
+                        <div id="objectives-container-en">
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control" placeholder="Enter learning objective">
+                                <button class="btn btn-primary" type="button" onclick="addObjective('en')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="objectives-container-zh-CN" style="display: none;">
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control" placeholder="输入学习目标">
+                                <button class="btn btn-primary" type="button" onclick="addObjective('zh-CN')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="objectives-container-zh-TW" style="display: none;">
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control" placeholder="輸入學習目標">
+                                <button class="btn btn-primary" type="button" onclick="addObjective('zh-TW')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -1264,7 +1345,7 @@
             },
             lessons: {}
         };
-        let quillEditors = {};
+        // let quillEditors = {};
         let lessonCount = 0;
         let reviewCount = 0;
         let coursesListData = [];
@@ -1273,7 +1354,7 @@
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
-            initializeQuillEditors();
+            // initializeQuillEditors();
             setupEventListeners();
             updateStepDisplay();
         });
@@ -1423,6 +1504,23 @@
             tbody.appendChild(row);
         });
     }
+function populateDropdown(id, options) {
+  const dropdown = document.getElementById(id);
+  dropdown.innerHTML = '<option disabled selected>Select an option</option>';
+  options.forEach(opt => {
+    const option = document.createElement('option');
+    option.value = opt.value;
+    option.textContent = opt.label;
+    dropdown.appendChild(option);
+  });
+}
+
+['en', 'zh-CN', 'zh-TW'].forEach(lang => {
+  populateDropdown(`dropdown-${lang}`, [
+    { value: '1', label: `${lang.toUpperCase()} Option 1` },
+    { value: '2', label: `${lang.toUpperCase()} Option 2` }
+  ]);
+});
 
 function openLessonModal(courseId, mode) {
   const course = coursesListData.find(c => c.course_id === courseId);
@@ -1722,27 +1820,27 @@ function showLessonModalFooter(show) {
         }
 
         // EXISTING FUNCTIONS (unchanged)
-        function initializeQuillEditors() {
-            const languages = ['en', 'zh-CN', 'zh-TW'];
-            languages.forEach(lang => {
-                const editorElement = document.getElementById(`description-editor-${lang}`);
-                if (editorElement) {
-                    quillEditors[`description-${lang}`] = new Quill(`#description-editor-${lang}`, {
-                        theme: 'snow',
-                        placeholder: 'Enter course description...',
-                        modules: {
-                            toolbar: [
-                                ['bold', 'italic', 'underline'],
-                                ['blockquote', 'code-block'],
-                                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                                ['link', 'image'],
-                                ['clean']
-                            ]
-                        }
-                    });
-                }
-            });
-        }
+        // function initializeQuillEditors() {
+        //     const languages = ['en', 'zh-CN', 'zh-TW'];
+        //     languages.forEach(lang => {
+        //         const editorElement = document.getElementById(`description-editor-${lang}`);
+        //         if (editorElement) {
+        //             quillEditors[`description-${lang}`] = new Quill(`#description-editor-${lang}`, {
+        //                 theme: 'snow',
+        //                 placeholder: 'Enter course description...',
+        //                 modules: {
+        //                     toolbar: [
+        //                         ['bold', 'italic', 'underline'],
+        //                         ['blockquote', 'code-block'],
+        //                         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        //                         ['link', 'image'],
+        //                         ['clean']
+        //                     ]
+        //                 }
+        //             });
+        //         }
+        //     });
+        // }
 
         function setupEventListeners() {
             document.addEventListener('click', function(e) {
@@ -1772,33 +1870,86 @@ if (thumbnailUploadVideo) {
             });
         }
 
-        function switchLanguageTab(clickedTab) {
-            const container = clickedTab.closest('.form-group');
-            const lang = clickedTab.dataset.lang;
+        // function switchLanguageTab(clickedTab) {
+        //     const container = clickedTab.closest('.form-group');
+        //     const lang = clickedTab.dataset.lang;
             
-            container.querySelectorAll('.lang-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            clickedTab.classList.add('active');
+        //     container.querySelectorAll('.lang-tab').forEach(tab => {
+        //         tab.classList.remove('active');
+        //     });
+        //     clickedTab.classList.add('active');
 
-            const inputs = container.querySelectorAll('input, textarea, div[id*="editor"]');
-            inputs.forEach(input => {
-                if (input.id && input.id.includes(lang)) {
-                    input.style.display = 'block';
-                } else if (input.id && (input.id.includes('-en') || input.id.includes('-zh-CN') || input.id.includes('-zh-TW'))) {
-                    input.style.display = 'none';
-                }
-            });
+        //     const inputs = container.querySelectorAll('input, textarea, div[id*="editor"]');
+        //     inputs.forEach(input => {
+        //         if (input.id && input.id.includes(lang)) {
+        //             input.style.display = 'block';
+        //         } else if (input.id && (input.id.includes('-en') || input.id.includes('-zh-CN') || input.id.includes('-zh-TW'))) {
+        //             input.style.display = 'none';
+        //         }
+        //     });
             
-            const containers = container.querySelectorAll('div[id*="container"], div[id*="group"]');
-            containers.forEach(cont => {
-                if (cont.id && cont.id.includes(lang)) {
-                    cont.style.display = 'block';
-                } else if (cont.id && (cont.id.includes('-en') || cont.id.includes('-zh-CN') || cont.id.includes('-zh-TW'))) {
-                    cont.style.display = 'none';
-                }
-            });
+        //     const containers = container.querySelectorAll('div[id*="container"], div[id*="group"]');
+        //     containers.forEach(cont => {
+        //         if (cont.id && cont.id.includes(lang)) {
+        //             cont.style.display = 'block';
+        //         } else if (cont.id && (cont.id.includes('-en') || cont.id.includes('-zh-CN') || cont.id.includes('-zh-TW'))) {
+        //             cont.style.display = 'none';
+        //         }
+        //     });
+        // }
+
+     function switchLanguageTab(clickedTab) {
+    const container = clickedTab.closest('.form-group');
+    const lang = clickedTab.dataset.lang;
+
+    // Activate the clicked tab
+    container.querySelectorAll('.lang-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    clickedTab.classList.add('active');
+
+    // Handle individual inputs/textareas/divs with ID match
+    const inputs = container.querySelectorAll('input, textarea, div[id*="editor"]');
+    inputs.forEach(input => {
+        if (input.id && input.id.includes(lang)) {
+            input.style.display = 'block';
+        } else if (
+            input.id && (
+                input.id.includes('-en') ||
+                input.id.includes('-zh-CN') ||
+                input.id.includes('-zh-TW')
+            )
+        ) {
+            input.style.display = 'none';
         }
+    });
+
+    // Handle row-based language containers like row-en, row-zh-CN, row-zh-TW
+    const languages = ['en', 'zh-CN', 'zh-TW'];
+    languages.forEach(l => {
+        const row = document.getElementById(`row-${l}`);
+        if (row) {
+            row.style.display = (l === lang) ? 'flex' : 'none';
+        }
+    });
+
+    // Optional: handle any containers using "container"/"group" naming convention
+    const containers = container.querySelectorAll('div[id*="container"], div[id*="group"]');
+    containers.forEach(cont => {
+        if (cont.id && cont.id.includes(lang)) {
+            cont.style.display = 'block';
+        } else if (
+            cont.id && (
+                cont.id.includes('-en') ||
+                cont.id.includes('-zh-CN') ||
+                cont.id.includes('-zh-TW')
+            )
+        ) {
+            cont.style.display = 'none';
+        }
+    });
+}
+
 
         async function handleFileUpload(event, courseId, fileType) {
     const file = event.target.files[0];
@@ -1882,28 +2033,25 @@ if (thumbnailUploadVideo) {
 }
 
 
-        function addObjective(lang) {
+         function addObjective(lang) {
             const container = document.getElementById(`objectives-container-${lang}`);
-            if (!container) return;
-            
             const input = container.querySelector('input');
             const objective = input.value.trim();
             
-            // if (objective) {
-            //     const objectiveDiv = document.createElement('div');
-            //     objectiveDiv
-            //     const objectiveDiv = document.createElement('div');
-            //     objectiveDiv.className = 'input-group mb-2';
-            //     objectiveDiv.innerHTML = `
-            //         <input type="text" class="form-control" value="${objective}" readonly>
-            //         <button class="btn btn-danger" type="button" onclick="this.parentElement.remove()">
-            //             <i class="fas fa-trash"></i>
-            //         </button>
-            //     `;
-            //     container.insertBefore(objectiveDiv, container.lastElementChild);
-            //     input.value = '';
-            // }
+            if (objective) {
+                const objectiveDiv = document.createElement('div');
+                objectiveDiv.className = 'input-group mb-2';
+                objectiveDiv.innerHTML = `
+                    <input type="text" class="form-control" value="${objective}" readonly>
+                    <button class="btn btn-danger" type="button" onclick="this.parentElement.remove()">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                container.insertBefore(objectiveDiv, container.lastElementChild);
+                input.value = '';
+            }
         }
+
 
      function addLesson(lessonData = null, readOnly = false) {
   lessonCount++;
@@ -2127,7 +2275,7 @@ function saveLessons() {
 
         function nextStep() {
             if (currentStep < totalSteps) {
-                if (validateCurrentStep()) {
+                if (!validateCurrentStep()) {
                     currentStep++;
                     updateStepDisplay();
                     if (currentStep === totalSteps) {
