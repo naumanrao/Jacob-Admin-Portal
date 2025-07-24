@@ -1,10 +1,11 @@
 import React, { Suspense, useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation, useNavigate, matchPath } from 'react-router-dom';
 import './CoursePortal.css';
 import Sidebar from './components/Sidebar';
 import TopNavbar from './components/TopNavbar';
 import CourseCreation from './components/CourseCreation';
 import CoursesList from './components/CoursesList';
+import LessonsTable from './components/LessonsTable';
 const Login = React.lazy(() => import('./components/Login'));
 
 function useSessionExpiration() {
@@ -33,8 +34,16 @@ function RequireAuth() {
   return token ? <Outlet /> : <Navigate to="/login" replace />;
 }
 
-function MainApp() {
-  const [activeSection, setActiveSection] = useState('courses');
+function MainApp({ darkMode, setDarkMode }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  // Set initial activeSection based on current route
+  const getInitialSection = () => {
+    if (location.pathname.startsWith('/courses-list')) return 'courses-list';
+    if (location.pathname.startsWith('/courses')) return 'courses';
+    return 'courses-list'; // fallback
+  };
+  const [activeSection, setActiveSection] = useState(getInitialSection());
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
 
@@ -42,6 +51,8 @@ function MainApp() {
     setActiveSection(section);
     if (section !== 'courses') setEditingCourse(null);
     setSidebarOpen(false);
+    if (section === 'courses') navigate('/courses');
+    else if (section === 'courses-list') navigate('/courses-list');
   };
   const handleSidebarToggle = () => {
     setSidebarOpen((open) => !open);
@@ -56,6 +67,9 @@ function MainApp() {
     setEditingCourse(course);
     setActiveSection('courses');
   };
+
+  // Check if current route is lessons table
+  const lessonsMatch = matchPath('/courses/:courseId/lessons', location.pathname);
 
   return (
     <>
@@ -74,10 +88,16 @@ function MainApp() {
           onSaveDraft={handleSaveDraft}
           onPublish={handlePublish}
           onSidebarToggle={handleSidebarToggle}
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
         />
         <div className="content-area">
-          {activeSection === 'courses' && <CourseCreation editingCourse={editingCourse} />}
-          {activeSection === 'courses-list' && <CoursesList onEdit={handleEditCourse} />}
+          <Routes>
+            <Route path="courses/:courseId/lessons" element={<LessonsTable darkMode={darkMode} setDarkMode={setDarkMode} />} />
+            <Route path="courses" element={<CourseCreation editingCourse={editingCourse} darkMode={darkMode} setDarkMode={setDarkMode} />} />
+            <Route path="courses-list" element={<CoursesList onEdit={handleEditCourse} darkMode={darkMode} setDarkMode={setDarkMode} />} />
+            <Route path="*" element={<Navigate to="courses-list" />} />
+          </Routes>
         </div>
       </div>
     </>
@@ -85,13 +105,30 @@ function MainApp() {
 }
 
 function App() {
+  // Only keep global theme state
+  const [darkMode, setDarkMode] = React.useState(() => localStorage.getItem('mainDarkMode') === 'true');
+
+  React.useEffect(() => {
+    localStorage.setItem('mainDarkMode', darkMode);
+    if (darkMode) {
+      document.body.classList.add('dark');
+    } else {
+      document.body.classList.remove('dark');
+    }
+  }, [darkMode]);
+
   return (
     <Router>
       <Suspense fallback={<div style={{textAlign:'center',marginTop:'3rem'}}>Loading...</div>}>
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Login darkMode={darkMode} setDarkMode={setDarkMode} />} />
           <Route element={<RequireAuth />}>
-            <Route path="/*" element={<MainApp />} />
+            <Route path="/*" element={
+              <MainApp
+                darkMode={darkMode}
+                setDarkMode={setDarkMode}
+              />
+            } />
           </Route>
         </Routes>
       </Suspense>

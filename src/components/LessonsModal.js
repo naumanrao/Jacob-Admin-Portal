@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const LANGUAGES = [
   { code: 'en', label: 'English' },
@@ -6,11 +6,33 @@ const LANGUAGES = [
   { code: 'zh-TW', label: '繁體中文' },
 ];
 
-function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLessons, onEditLesson, onViewLesson }) {
+function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLessons, onEditLesson, onViewLesson, mode = 'edit', loading = false, error = null }) {
   const [lessons, setLessons] = useState(initialLessons || []);
   const [expandedLessons, setExpandedLessons] = useState([]); // Track expanded/collapsed state
   const [uploadingVideoIdx, setUploadingVideoIdx] = useState(null); // Track which lesson is uploading
   const [saving, setSaving] = useState(false); // Track if saving lessons
+
+  const isViewMode = mode === 'view';
+  const isAddMode = mode === 'edit' && lessons.length === 1 && !lessons[0].lesson_key;
+
+  // Auto-expand the first lesson if only one lesson is passed (for view/edit)
+  useEffect(() => {
+    if (show && lessons.length === 1) {
+      setExpandedLessons([0]);
+    }
+  }, [show, lessons.length]);
+
+  // Also expand when initialLessons changes and length is 1
+  useEffect(() => {
+    if (show && initialLessons && initialLessons.length === 1) {
+      setExpandedLessons([0]);
+    }
+  }, [show, initialLessons]);
+
+  // Sync lessons state with initialLessons prop when it changes
+  useEffect(() => {
+    setLessons(initialLessons || []);
+  }, [initialLessons]);
 
   // Add a new lesson
   const handleAddLesson = () => {
@@ -66,7 +88,7 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
       const token = sessionStorage.getItem('authToken');
       if (!token) throw new Error('Not authenticated');
       const formData = new FormData();
-      formData.append('preview_video', file);
+      formData.append('lessons', file);
       const response = await fetch(`https://jacobpersonal.onrender.com/admin/api/courses/${course.course_id}/upload-assets`, {
         method: 'POST',
         headers: {
@@ -114,7 +136,7 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
     try {
       for (const lesson of lessons) {
         const video_url = lesson.videoKey
-          ? `courses/${course.course_id}/lessons/${lesson.videoKey}`
+          ? `${lesson.videoKey}`
           : '';
         const lessonData = {
           title: lesson.title,
@@ -147,13 +169,49 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
 
   if (!show) return null;
 
+  if (loading) {
+    return (
+      <div className="modal fade show" style={{ display: 'block', background: 'rgba(0,0,0,0.25)' }} tabIndex="-1" aria-modal="true" role="dialog">
+        <div className="modal-dialog modal-xl modal-dialog-scrollable">
+          <div className="modal-content shadow-lg">
+            <div className="modal-header bg-white">
+              <h5 className="modal-title"><i className="fas fa-spinner fa-spin me-2"></i>Loading Lesson...</h5>
+            </div>
+            <div className="modal-body text-center py-5">
+              <div className="spinner-border text-primary" role="status"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="modal fade show" style={{ display: 'block', background: 'rgba(0,0,0,0.25)' }} tabIndex="-1" aria-modal="true" role="dialog">
+        <div className="modal-dialog modal-xl modal-dialog-scrollable">
+          <div className="modal-content shadow-lg">
+            <div className="modal-header bg-white">
+              <h5 className="modal-title text-danger"><i className="fas fa-exclamation-triangle me-2"></i>Error</h5>
+            </div>
+            <div className="modal-body text-center py-5">
+              <div className="alert alert-danger">{error}</div>
+            </div>
+            <div className="modal-footer bg-white">
+              <button className="btn btn-secondary" onClick={onClose}>Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="modal fade show" style={{ display: 'block', background: 'rgba(0,0,0,0.25)', pointerEvents: (saving || uploadingVideoIdx !== null) ? 'none' : 'auto' }} tabIndex="-1" aria-labelledby="lessonModalLabel" aria-modal="true" role="dialog">
       <div className="modal-dialog modal-xl modal-dialog-scrollable">
         <div className="modal-content shadow-lg">
           <div className="modal-header sticky-top bg-white" style={{ zIndex: 2 }}>
             <h5 className="modal-title d-flex align-items-center gap-2" id="lessonModalLabel">
-              <i className="fas fa-chalkboard-teacher me-2 text-primary"></i> Manage Lessons
+              <i className="fas fa-chalkboard-teacher me-2 text-primary"></i> {isViewMode ? 'View Lesson' : 'Manage Lessons'}
             </h5>
             <button type="button" className="btn-close" onClick={saving || uploadingVideoIdx !== null ? undefined : onClose} aria-label="Close" disabled={saving || uploadingVideoIdx !== null}></button>
           </div>
@@ -164,7 +222,7 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
                 <h5 id="modal-subheading" className="mb-1">Course Lessons</h5>
                 <p className="text-muted mb-0">Manage your course lessons and video content</p>
               </div>
-              <button className="btn btn-primary d-flex align-items-center gap-2" id="add-lesson-btn" onClick={handleAddLesson} title="Add a new lesson">
+              <button className="btn btn-primary d-flex align-items-center gap-2" id="add-lesson-btn" onClick={handleAddLesson} title="Add a new lesson" disabled={isViewMode} style={isViewMode ? { display: 'none' } : {}}>
                 <i className="fas fa-plus"></i> Add Lesson
               </button>
             </div>
@@ -181,13 +239,14 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
                       <div className="lesson-header d-flex justify-content-between align-items-center mb-2">
                         <div className="d-flex align-items-center gap-2">
                           <span className="badge bg-primary me-2" style={{ fontSize: '1rem' }}>#{idx + 1}</span>
-                          <h6 className="lesson-title mb-0">{lesson.title.en || `Lesson ${idx + 1}`}</h6>
+                          <h6 className="lesson-title mb-0">{lesson.title?.en || `Lesson ${idx + 1}`}</h6>
                         </div>
                         <div className="lesson-actions d-flex gap-2">
                           <button
                             className={`btn btn-info btn-sm d-flex align-items-center gap-1 ${expandedLessons.includes(idx) ? 'active' : ''}`}
                             onClick={() => handleToggleExpand(idx)}
                             title={expandedLessons.includes(idx) ? 'Collapse' : 'Expand'}
+                            disabled={isViewMode}
                           >
                             {expandedLessons.includes(idx) ? (
                               <><i className="fas fa-chevron-up"></i> Collapse</>
@@ -199,6 +258,8 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
                             className="btn btn-danger btn-sm d-flex align-items-center gap-1"
                             onClick={() => handleRemoveLesson(idx)}
                             title="Remove lesson"
+                            disabled={isViewMode}
+                            style={isViewMode ? { display: 'none' } : {}}
                           >
                             <i className="fas fa-trash"></i>
                           </button>
@@ -227,9 +288,10 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
                                 type="text"
                                 className="form-control mb-2"
                                 style={{ display: lesson.activeLang === lang.code ? 'block' : 'none' }}
-                                value={lesson.title[lang.code] || ''}
+                                value={lesson.title?.[lang.code] || ''}
                                 onChange={e => handleLessonChange(idx, 'title', e.target.value, lang.code)}
                                 placeholder={`Title (${lang.label})`}
+                                readOnly={isViewMode}
                               />
                             ))}
                           </div>
@@ -253,9 +315,10 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
                                 key={lang.code}
                                 className="form-control mb-2"
                                 style={{ display: lesson.activeLang === lang.code ? 'block' : 'none' }}
-                                value={lesson.content[lang.code] || ''}
+                                value={lesson.content?.[lang.code] || ''}
                                 onChange={e => handleLessonChange(idx, 'content', e.target.value, lang.code)}
                                 placeholder={`Content (${lang.label})`}
+                                readOnly={isViewMode}
                               />
                             ))}
                           </div>
@@ -265,8 +328,8 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
                                 <label className="form-label fw-semibold">Course Thumbnail Video</label>
                                 <div
                                   className="file-upload-area"
-                                  onClick={() => (saving || uploadingVideoIdx !== null) ? null : document.getElementById(`lesson-video-${idx}`).click()}
-                                  style={{ cursor: (saving || uploadingVideoIdx !== null) ? 'not-allowed' : 'pointer', border: '1px dashed #ccc', padding: '1rem', textAlign: 'center', background: '#fff' }}
+                                  onClick={isViewMode || saving || uploadingVideoIdx !== null ? undefined : () => document.getElementById(`lesson-video-${idx}`).click()}
+                                  style={{ cursor: (isViewMode || saving || uploadingVideoIdx !== null) ? 'not-allowed' : 'pointer', border: '1px dashed #ccc', padding: '1rem', textAlign: 'center', background: '#fff' }}
                                 >
                                   <div className="file-upload-icon">
                                     <i className="fas fa-cloud-upload-alt"></i>
@@ -287,7 +350,7 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
                                   accept="video/*"
                                   style={{ display: 'none' }}
                                   onChange={e => handleVideoUpload(idx, e.target.files[0])}
-                                  disabled={saving || uploadingVideoIdx !== null}
+                                  disabled={isViewMode || saving || uploadingVideoIdx !== null}
                                 />
                               </div>
                             </div>
@@ -299,6 +362,7 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
                                 value={lesson.duration}
                                 onChange={e => handleLessonChange(idx, 'duration', e.target.value)}
                                 placeholder="e.g. 10:00"
+                                readOnly={isViewMode}
                               />
                             </div>
                             <div className="col-md-4">
@@ -310,6 +374,7 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
                                   id={`free-lesson-${idx}`}
                                   checked={lesson.isFree}
                                   onChange={e => handleLessonChange(idx, 'isFree', e.target.checked)}
+                                  disabled={isViewMode}
                                 />
                                 <label className="form-check-label" htmlFor={`free-lesson-${idx}`}>
                                   <i className="fas fa-unlock me-1"></i> Free Lesson
@@ -330,13 +395,14 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
               )}
             </div>
           </div>
-
           <div className="modal-footer sticky-bottom bg-white" style={{ zIndex: 2 }}>
             <button className="btn btn-secondary" onClick={saving || uploadingVideoIdx !== null ? undefined : onClose} disabled={saving || uploadingVideoIdx !== null}>Close</button>
-            <button className="btn btn-success" id="save-lessons-btn" onClick={handleSaveLessons} disabled={saving || uploadingVideoIdx !== null}>
-              {saving ? <span className="loading-spinner spinner-border spinner-border-sm me-2"></span> : <i className="fas fa-save me-2"></i>}
-              Save Lessons
-            </button>
+            {isAddMode && (
+              <button className="btn btn-success" id="save-lessons-btn" onClick={handleSaveLessons} disabled={saving || uploadingVideoIdx !== null}>
+                {saving ? <span className="loading-spinner spinner-border spinner-border-sm me-2"></span> : <i className="fas fa-save me-2"></i>}
+                Save Lessons
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -344,4 +410,4 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
   );
 }
 
-export default LessonsModal; 
+export default LessonsModal;

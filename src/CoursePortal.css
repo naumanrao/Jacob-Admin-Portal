@@ -14,6 +14,188 @@
     --border-radius: 8px;
 }
 
+/* CYBER DARK THEME COLORS */
+:root {
+  --background-dark: #0a192f;
+  --background-dark-alt: #112240;
+  --accent: #36c3b6;
+  --text-main: #ccd6f6;
+  --text-secondary: #8892b0;
+  --white: #fff;
+}
+
+body.dark {
+  background: var(--background-dark) !important;
+  color: var(--text-main) !important;
+}
+body.dark .main-content,
+body.dark .form-container,
+body.dark .stats-grid,
+body.dark .stat-card,
+body.dark .courses-table,
+body.dark .page-section.active,
+body.dark .content-area,
+body.dark .sidebar,
+body.dark .sidebar-header,
+body.dark .sidebar-menu,
+body.dark .progress-container,
+body.dark .wizard-navigation,
+body.dark .modal-header,
+body.dark .modal-body,
+body.dark .modal-footer,
+body.dark .lessons-container,
+body.dark .lesson-item,
+body.dark .lesson-header {
+  background: var(--background-dark-alt) !important;
+  color: var(--text-main) !important;
+}
+body.dark .logo-text {
+  color: var(--white) !important;
+}
+body.dark .section-title,
+body.dark .preview-title,
+body.dark .lesson-title {
+  color: var(--text-main) !important;
+}
+body.dark .section-subtitle,
+body.dark .form-label,
+body.dark .table td,
+body.dark .table th {
+  color: var(--text-secondary) !important;
+}
+body.dark .btn,
+body.dark .btn-primary,
+body.dark .btn-outline-primary {
+  background: transparent !important;
+  color: var(--accent) !important;
+  border: 1px solid var(--accent) !important;
+  box-shadow: none !important;
+}
+body.dark .btn-primary:hover,
+body.dark .btn-outline-primary:hover {
+  background: var(--accent) !important;
+  color: var(--background-dark) !important;
+}
+body.dark .alert {
+  background: var(--background-dark-alt) !important;
+  color: var(--accent) !important;
+  border: 1px solid var(--accent) !important;
+}
+body.dark .menu-item.active {
+  background: #233554 !important;
+  color: var(--accent) !important;
+  border-right: 3px solid var(--accent) !important;
+}
+body.dark .menu-item {
+  color: var(--accent) !important;
+}
+body.dark .top-navbar {
+  background: var(--background-dark-alt) !important;
+  color: var(--accent) !important;
+  border-bottom: 1px solid #233554 !important;
+}
+body.dark .breadcrumb-nav a {
+  color: var(--accent) !important;
+}
+body.dark .loading-spinner {
+  border: 3px solid var(--background-dark-alt) !important;
+  border-top-color: var(--accent) !important;
+}
+body.dark .progress-container {
+  border: 1px solid #233554 !important;
+}
+body.dark .progress-line {
+  background: #233554 !important;
+}
+body.dark .progress-line-active {
+  background: var(--accent) !important;
+}
+body.dark .step.active .step-circle {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: var(--background-dark) !important;
+}
+body.dark .step.completed .step-circle {
+  background: #34A853 !important;
+  border-color: #34A853 !important;
+  color: var(--background-dark) !important;
+}
+body.dark .step-label {
+  color: var(--accent) !important;
+}
+body.dark .language-tabs {
+  background: var(--background-dark-alt) !important;
+  border-radius: var(--border-radius);
+}
+body.dark .lang-tab {
+  color: var(--accent) !important;
+  background: transparent !important;
+}
+body.dark .lang-tab.active {
+  background: var(--accent) !important;
+  color: var(--background-dark) !important;
+  box-shadow: 0 1px 3px rgba(100,255,218,0.15) !important;
+}
+body.dark .file-upload-area {
+  background: var(--background-dark-alt) !important;
+  border: 2px dashed var(--accent) !important;
+  color: var(--accent) !important;
+}
+body.dark .file-upload-area .file-upload-icon {
+  color: var(--accent) !important;
+}
+body.dark .course-preview {
+  background: var(--background-dark-alt) !important;
+  color: var(--text-main) !important;
+  border: 1px solid #233554 !important;
+}
+body.dark .preview-title {
+  color: var(--text-main) !important;
+}
+body.dark .preview-price {
+  color: var(--accent) !important;
+}
+body.dark .table,
+body.dark .table-striped {
+  background: var(--background-dark-alt) !important;
+  color: var(--text-main) !important;
+}
+body.dark .table tr,
+body.dark .table-striped tr,
+body.dark .table-striped > tbody > tr {
+  background-color: var(--background-dark-alt) !important;
+  color: var(--text-main) !important;
+}
+body.dark .table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: #1a2332 !important;
+}
+body.dark .table-striped > tbody > tr:nth-of-type(even) {
+  background-color: var(--background-dark-alt) !important;
+}
+body.dark .table th,
+body.dark .table td {
+  border-color: #233554 !important;
+  color: var(--text-main) !important;
+}
+body.dark .table thead {
+  background: var(--background-dark) !important;
+  color: var(--accent) !important;
+}
+body.dark .table tbody {
+  background: var(--background-dark-alt) !important;
+  color: var(--text-main) !important;
+}
+body.dark tr,
+body.dark th,
+body.dark td {
+  background-color: var(--background-dark-alt) !important;
+  color: var(--text-main) !important;
+}
+body.dark .step {
+  background: var(--background-dark-alt) !important;
+  color: var(--text-main) !important;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -844,4 +1026,45 @@ body {
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+/* All dark theme styles have been removed. Ready for a fresh dark theme implementation. */
+body.dark .form-container,
+body.dark .stat-card,
+body.dark .courses-table,
+body.dark .progress-container,
+body.dark .modal-header,
+body.dark .modal-body,
+body.dark .modal-footer,
+body.dark .sidebar,
+body.dark .btn,
+body.dark .btn-primary,
+body.dark .btn-outline-primary,
+body.dark .table,
+body.dark .table th,
+body.dark .table td,
+body.dark .step,
+body.dark .step-circle,
+body.dark .file-upload-area,
+body.dark .course-preview,
+body.dark .language-tabs,
+body.dark .lang-tab,
+body.dark .lesson-item,
+body.dark .lesson-header {
+  border-color: #233554 !important;
+}
+
+body.dark input,
+body.dark textarea,
+body.dark select,
+body.dark .form-control,
+body.dark .form-select {
+  background: var(--background-dark-alt) !important;
+  color: var(--text-main) !important;
+  border-color: #233554 !important;
+}
+body.dark input::placeholder,
+body.dark textarea::placeholder {
+  color: var(--text-secondary) !important;
+  opacity: 1 !important;
 }

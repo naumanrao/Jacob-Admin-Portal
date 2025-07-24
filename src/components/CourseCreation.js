@@ -11,7 +11,7 @@ const API_CONFIG = {
   UPLOAD_URL: (courseId) => `https://jacobpersonal.onrender.com/admin/api/courses/${courseId}/upload-assets`,
 };
 
-function CourseCreation({ editingCourse }) {
+function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
 
@@ -298,7 +298,7 @@ function CourseCreation({ editingCourse }) {
         {/* Step 1: Course Details (thumbnail upload) */}
         <div className={`form-section${currentStep === 1 ? ' active' : ''}`} id="step-1">
           <h2 className="section-title">Course Details</h2>
-          <p className="section-subtitle">Enter the basic information about your course</p>
+          <p className="section-subtitle">Enter basic information for your course.</p>
           <div className="row">
             <div className="col-md-8">
               <div className="form-group">
@@ -372,7 +372,7 @@ function CourseCreation({ editingCourse }) {
               <div className="row">
                 <div className="col-md-6">
                   <div className="form-group">
-                    <label className="form-label">Course Price ($)</label>
+                    <label className="form-label">Course Price</label>
                     <input type="number" className="form-control" id="price" placeholder="0.00" min="0" step="0.01" value={price || ''} onChange={e => setPrice(e.target.value)} />
                   </div>
                 </div>
@@ -386,7 +386,7 @@ function CourseCreation({ editingCourse }) {
                     <i className="fas fa-cloud-upload-alt"></i>
                   </div>
                   <p className="mb-1">Click to upload thumbnail</p>
-                  <small className="text-muted">JPG, PNG up to 5MB</small>
+                  <small className="text-muted">JPG/PNG up to 5MB</small>
                 </div>
                 <input ref={thumbnailInputRef} type="file" id="thumbnail-upload" accept="image/*" style={{ display: 'none' }} onChange={handleThumbnailChange} />
                 {thumbnailPreview && (
@@ -401,7 +401,7 @@ function CourseCreation({ editingCourse }) {
         {/* Step 2: About Course (video upload) */}
         <div className={`form-section${currentStep === 2 ? ' active' : ''}`} id="step-2">
           <h2 className="section-title">About Course</h2>
-          <p className="section-subtitle">Provide detailed information about your course</p>
+          <p className="section-subtitle">Provide detailed information about your course.</p>
           <div className="form-group">
             <label className="form-label">Course Description</label>
             <div className="language-tabs">
@@ -427,38 +427,38 @@ function CourseCreation({ editingCourse }) {
                 <label htmlFor="dropdown-en" className="form-label">Select Option</label>
                 <select className="form-control" id="dropdown-en" value={dropdowns['en'] || ''} onChange={e => setDropdowns(prev => ({ ...prev, en: e.target.value }))}>
                   <option value="">Select an option</option>
-                  <option value="1">EN Option 1</option>
-                  <option value="2">EN Option 2</option>
+                  <option value="1">Option 1</option>
+                  <option value="2">Option 2</option>
                 </select>
               </div>
             </div>
             {/* Simplified Chinese */}
             <div className="row mb-3" id="row-zh-CN" style={{ display: descLang === 'zh-CN' ? 'flex' : 'none' }}>
               <div className="col-md-6">
-                <label htmlFor="description-zh-CN" className="form-label">Description (简体中文)</label>
+                <label htmlFor="description-zh-CN" className="form-label">Description (Simplified Chinese)</label>
                 <textarea className="form-control" id="description-zh-CN" rows={4} placeholder="输入课程描述..." value={descriptions['zh-CN'] || ''} onChange={e => setDescriptions(prev => ({ ...prev, 'zh-CN': e.target.value }))}></textarea>
               </div>
               <div className="col-md-6">
                 <label htmlFor="dropdown-zh-CN" className="form-label">Select Option</label>
                 <select className="form-control" id="dropdown-zh-CN" value={dropdowns['zh-CN'] || ''} onChange={e => setDropdowns(prev => ({ ...prev, 'zh-CN': e.target.value }))}>
                   <option value="">Select an option</option>
-                  <option value="1">ZH-CN Option 1</option>
-                  <option value="2">ZH-CN Option 2</option>
+                  <option value="1">Option 1</option>
+                  <option value="2">Option 2</option>
                 </select>
               </div>
             </div>
             {/* Traditional Chinese */}
             <div className="row mb-3" id="row-zh-TW" style={{ display: descLang === 'zh-TW' ? 'flex' : 'none' }}>
               <div className="col-md-6">
-                <label htmlFor="description-zh-TW" className="form-label">Description (繁體中文)</label>
+                <label htmlFor="description-zh-TW" className="form-label">Description (Traditional Chinese)</label>
                 <textarea className="form-control" id="description-zh-TW" rows={4} placeholder="輸入課程描述..." value={descriptions['zh-TW'] || ''} onChange={e => setDescriptions(prev => ({ ...prev, 'zh-TW': e.target.value }))}></textarea>
               </div>
               <div className="col-md-6">
                 <label htmlFor="dropdown-zh-TW" className="form-label">Select Option</label>
                 <select className="form-control" id="dropdown-zh-TW" value={dropdowns['zh-TW'] || ''} onChange={e => setDropdowns(prev => ({ ...prev, 'zh-TW': e.target.value }))}>
                   <option value="">Select an option</option>
-                  <option value="1">ZH-TW Option 1</option>
-                  <option value="2">ZH-TW Option 2</option>
+                  <option value="1">Option 1</option>
+                  <option value="2">Option 2</option>
                 </select>
               </div>
             </div>
@@ -652,7 +652,7 @@ function CourseCreation({ editingCourse }) {
                   <div className="file-upload-icon">
                     <i className="fas fa-cloud-upload-alt"></i>
                   </div>
-                  <p className="mb-1">Click to upload Video</p>
+                  <p className="mb-1">Click to upload video</p>
                 </div>
                 <input ref={videoInputRef} type="file" id="preview-video" accept="video/*" style={{ display: 'none' }} onChange={handleVideoChange} />
                 {videoPreview && (
@@ -667,7 +667,7 @@ function CourseCreation({ editingCourse }) {
         {/* Step 3: Sample Reviews (dynamic) */}
         <div className={`form-section${currentStep === 3 ? ' active' : ''}`} id="step-3">
           <h2 className="section-title">Sample Reviews</h2>
-          <p className="section-subtitle">Add sample reviews and testimonials for your course</p>
+          <p className="section-subtitle">Add sample reviews for your course.</p>
           <div className="form-group">
             <label className="form-label">Sample Reviews</label>
             <div className="mb-3">
@@ -723,7 +723,7 @@ function CourseCreation({ editingCourse }) {
         {/* Step 4: Publish Course (show reviews in preview) */}
         <div className={`form-section${currentStep === 4 ? ' active' : ''}`} id="step-4">
           <h2 className="section-title">Course Preview</h2>
-          <p className="section-subtitle">Review your course before publishing</p>
+          <p className="section-subtitle">Review before publishing your course.</p>
           {publishAlert.message && (
             <div className={`alert alert-${publishAlert.type}`}>{publishAlert.message}</div>
           )}
@@ -785,7 +785,7 @@ function CourseCreation({ editingCourse }) {
                 </div>
                 <div className="mb-2">
                   <strong>Languages:</strong>
-                  <span>EN, 中文</span>
+                  <span>English, Chinese</span>
                 </div>
               </div>
             </div>

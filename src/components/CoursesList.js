@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import LessonsModal from './LessonsModal';
+import { useNavigate } from 'react-router-dom';
 
 const API_CONFIG = {
   COURSES_LIST_URL: 'https://jacobpersonal.onrender.com/admin/api/courses',
 };
 
-function CoursesList({ onEdit }) {
+function CoursesList({ onEdit, darkMode, setDarkMode }) {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showLessonsModal, setShowLessonsModal] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState(null);
-  const [lessons, setLessons] = useState([]); // Placeholder for lessons data
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -41,24 +40,57 @@ function CoursesList({ onEdit }) {
     fetchCourses();
   }, []);
 
-  const handleAddLessonsClick = (course) => {
-    setSelectedCourse(course);
-    // TODO: Fetch lessons for this course from API
-    setLessons([]); // Reset or fetch lessons here
-    setShowLessonsModal(true);
-  };
-
-  const handleCloseLessonsModal = () => {
-    setShowLessonsModal(false);
-    setSelectedCourse(null);
-    setLessons([]);
-  };
-
   // Dummy handlers for now
   const handleAddLesson = () => alert('Add Lesson clicked');
   const handleSaveLessons = () => alert('Save Lessons clicked');
   const handleEditLesson = (lesson) => alert('Edit Lesson: ' + lesson.title);
   const handleViewLesson = (lesson) => alert('View Lesson: ' + lesson.title);
+
+  // ShimmerTable for loading state
+  function ShimmerTable() {
+    return (
+      <div style={{ padding: 16 }}>
+        <style>{`
+          .shimmer {
+            height: 1.2em;
+            width: 100%;
+            background: linear-gradient(90deg, ${darkMode ? '#233554' : '#f0f0f0'} 25%, ${darkMode ? '#1a2332' : '#e0e0e0'} 37%, ${darkMode ? '#233554' : '#f0f0f0'} 63%);
+            background-size: 400% 100%;
+            animation: shimmer 1.2s ease-in-out infinite;
+            border-radius: 4px;
+          }
+          .shimmer-cell {
+            min-width: 80px;
+            height: 1.2em;
+          }
+          @keyframes shimmer {
+            0% { background-position: -400px 0; }
+            100% { background-position: 400px 0; }
+          }
+        `}</style>
+        <table className="courses-table" style={{ width: '100%' }}>
+          <thead>
+            <tr>
+              <th>Course</th>
+              <th>Price</th>
+              <th>No. of Lessons</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[1,2,3,4,5].map(i => (
+              <tr key={i}>
+                <td><div className="shimmer shimmer-cell" /></td>
+                <td><div className="shimmer shimmer-cell" /></td>
+                <td><div className="shimmer shimmer-cell" /></td>
+                <td><div className="shimmer shimmer-cell" style={{ width: 100 }} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
 
   return (
     <div className="page-section active" id="courses-list-section">
@@ -67,7 +99,7 @@ function CoursesList({ onEdit }) {
           <h1 className="h2 mb-1">Courses Management</h1>
           <p className="text-muted">Manage your course catalog</p>
         </div>
-        <button className="btn btn-primary">
+        <button className="btn btn-primary" onClick={() => { if (onEdit) onEdit(null); navigate('/courses'); }}>
           <i className="fas fa-plus me-2"></i>Create New Course
         </button>
       </div>
@@ -102,49 +134,43 @@ function CoursesList({ onEdit }) {
             )}
           </div>
           <div className="table-responsive">
-            <table className="courses-table" id="courses-table">
-              <thead>
-                <tr>
-                  <th>Course</th>
-                  <th>Price</th>
-                  <th>No. of Lessons</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="courses-tbody">
-                {courses.length === 0 && !loading && !error && (
+            {loading ? (
+              <ShimmerTable />
+            ) : (
+              <table className="courses-table" id="courses-table">
+                <thead>
                   <tr>
-                    <td colSpan={4} className="text-center text-muted">No courses found.</td>
+                    <th>Course</th>
+                    <th>Price</th>
+                    <th>No. of Lessons</th>
+                    <th>Actions</th>
                   </tr>
-                )}
-                {courses.map((course) => (
-                  <tr key={course.course_id}>
-                    <td>{course.title || 'Untitled Course'}</td>
-                    <td>${course.price || 0}</td>
-                    <td>{course.number_of_lessons || 0}</td>
-                    <td>
-                      <button className="btn btn-sm btn-outline-primary">View</button>
-                      <button className="btn btn-sm btn-outline-secondary ms-2" onClick={() => onEdit && onEdit(course)}>Edit</button>
-                      <button className="btn btn-sm btn-outline-success ms-2" onClick={() => handleAddLessonsClick(course)}>Add Lessons</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody id="courses-tbody">
+                  {courses.length === 0 && !error && (
+                    <tr>
+                      <td colSpan={4} className="text-center text-muted">No courses found</td>
+                    </tr>
+                  )}
+                  {courses.map((course) => (
+                    <tr key={course.course_id}>
+                      <td>{course.title || 'Untitled Course'}</td>
+                      <td>${course.price || 0}</td>
+                      <td>{course.number_of_lessons || 0}</td>
+                      <td>
+                        <button className="btn btn-sm btn-outline-secondary ms-2" onClick={() => { if (onEdit) onEdit(course); navigate('/courses'); }}>Edit</button>
+                        <button className="btn btn-sm btn-outline-info ms-2" onClick={() => navigate(`/courses/${course.course_id}/lessons`)}>
+                          Lessons
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </div>
-      {/* Render LessonsModal */}
-      <LessonsModal
-        show={showLessonsModal}
-        onClose={handleCloseLessonsModal}
-        course={selectedCourse}
-        lessons={lessons}
-        onAddLesson={handleAddLesson}
-        onSaveLessons={handleSaveLessons}
-        onEditLesson={handleEditLesson}
-        onViewLesson={handleViewLesson}
-      />
     </div>
   );
 }

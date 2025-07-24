@@ -34,7 +34,8 @@
     font-weight: 400;
 }
 .required {
-    color: #666;
+    color: #e53935 !important;
+    font-weight: bold;
 }
 .form-control {
     width: 100%;
@@ -147,4 +148,115 @@
         font-size: 24px;
         margin-bottom: 25px;
     }
+} 
+
+/* Dark mode styles - Neon Purple Theme */
+.login-center-wrapper.dark {
+  background: #181824 !important;
+}
+.login-container.dark {
+  background: #232336 !important;
+  color: #a259ff !important;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.7) !important;
+}
+.login-container.dark .form-label {
+  color: #a259ff !important;
+}
+.login-container.dark .form-control {
+  background: #232336 !important;
+  color: #a259ff !important;
+  border: 1px solid #a259ff !important;
+}
+.login-container.dark .form-control:focus {
+  border-color: #a259ff !important;
+  box-shadow: 0 0 0 2px rgba(162,89,255,0.25) !important;
+}
+.login-container.dark .login-button {
+  background: linear-gradient(90deg, #a259ff 0%, #6a4cff 100%) !important;
+  color: #fff !important;
+  border: none !important;
+}
+.login-container.dark .login-button:disabled {
+  background: #333 !important;
+  color: #a259ff !important;
+}
+.login-container.dark .alert {
+  background: #2d2940 !important;
+  color: #a259ff !important;
+  border: 1px solid #a259ff !important;
+}
+.login-container.dark .remember-me label,
+.login-container.dark .forgot-password {
+  color: #a259ff !important;
+}
+.login-container.dark .forgot-password:hover {
+  color: #fff !important;
+}
+.login-container.dark .login-title {
+  color: #a259ff !important;
+}
+.login-container.dark .login-button {
+  box-shadow: 0 2px 8px 0 rgba(162,89,255,0.15) !important;
+}
+.login-container.dark .form-group input[type="checkbox"]:checked + label {
+  color: #a259ff !important;
+}
+/* Neon purple for links */
+.login-container.dark a,
+.login-container.dark .forgot-password {
+  color: #a259ff !important;
+}
+/* Neon purple for language/dark mode toggles */
+.login-container.dark button[aria-label],
+.login-container.dark .segmented-control button {
+  color: #a259ff !important;
+}
+.login-container.dark .segmented-control button.active {
+  background: #a259ff !important;
+  color: #fff !important;
+} 
+
+.segmented-control {
+  display: inline-flex;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #f1f3f4;
+  border: 1px solid #e0e0e0;
+}
+.segmented-control button {
+  background: transparent;
+  color: #333;
+  border: none;
+  outline: none;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 0;
+}
+.segmented-control button.active {
+  background: #4285F4;
+  color: #fff;
+  box-shadow: 0 2px 8px 0 rgba(66,133,244,0.10);
+  border-radius: 20px;
+  z-index: 1;
+}
+
+/* Dark mode segmented control */
+.login-container.dark .segmented-control {
+  background: #232336;
+  border: 1px solid #333;
+}
+.login-container.dark .segmented-control button {
+  color: #a259ff;
+  background: transparent;
+}
+.login-container.dark .segmented-control button.active {
+  background: #a259ff;
+  color: #fff;
+  box-shadow: 0 2px 8px 0 rgba(162,89,255,0.15);
 } 
