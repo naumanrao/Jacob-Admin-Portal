@@ -55,6 +55,37 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
   const [publishLoading, setPublishLoading] = useState(false);
   const [publishAlert, setPublishAlert] = useState({ message: '', type: '' });
 
+  // Dropdown options state
+  const [dropdownOptions, setDropdownOptions] = useState([]);
+  const [dropdownLoading, setDropdownLoading] = useState(false);
+  const [dropdownError, setDropdownError] = useState('');
+
+  // Fetch dropdown options from API on mount
+  useEffect(() => {
+    setDropdownLoading(true);
+    setDropdownError('');
+    const token = sessionStorage.getItem('authToken');
+    fetch('https://jacobpersonal.onrender.com/admin/api/content-types?entity=courses', {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch dropdown options');
+        return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data?.data?.content_types)) {
+          setDropdownOptions(data.data.content_types);
+        } else {
+          setDropdownOptions([]);
+        }
+      })
+      .catch(err => {
+        setDropdownError('Could not load options');
+        setDropdownOptions([]);
+      })
+      .finally(() => setDropdownLoading(false));
+  }, []);
+
   // Load editingCourse data into form
   useEffect(() => {
     if (editingCourse) {
@@ -145,7 +176,7 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
       const token = sessionStorage.getItem('authToken');
       if (!token) throw new Error('Not authenticated');
       // For new course, use 'new' as courseId (backend should handle this or return a temp ID)
-      const courseId = 'new';
+      const courseId = 'test';
       const formData = new FormData();
       formData.append(type, file);
       const response = await fetch(API_CONFIG.UPLOAD_URL(courseId), {
@@ -216,17 +247,89 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
 
   // API: Gather all form data
   const getCoursePayload = () => {
+    const LANGS = ['en', 'zh-CN', 'zh-TW'];
+    // Helper to fill missing language fields
+    const fillLangs = (obj, fallback = '-') => {
+      const enVal = obj.en || fallback;
+      return {
+        en: obj.en || enVal,
+        'zh-CN': obj['zh-CN'] || enVal,
+        'zh-TW': obj['zh-TW'] || enVal
+      };
+    };
+
+    // Description content block
+    const descContent = {
+      text: fillLangs({
+        en: descriptions.en || '-',
+        'zh-CN': descriptions['zh-CN'] || '-',
+        'zh-TW': descriptions['zh-TW'] || '-'
+      }),
+      type: dropdowns['en'] || 'p'
+    };
+
+    // Objectives block
+    let hasObjectives = LANGS.some(lang => (objectives[lang] && objectives[lang].length > 0));
+    let objectivesContent = null;
+    if (hasObjectives) {
+      let textObj = {};
+      const maxObjectives = Math.max(...LANGS.map(lang => (objectives[lang] || []).length));
+      for (let i = 0; i < maxObjectives; i++) {
+        // For each objective, fill missing languages with English or '-'
+        const enVal = objectives.en[i] || '-';
+        textObj[`li${i + 1}`] = fillLangs({
+          en: objectives.en[i] || enVal,
+          'zh-CN': objectives['zh-CN'][i] || enVal,
+          'zh-TW': objectives['zh-TW'][i] || enVal
+        }, enVal);
+      }
+      objectivesContent = {
+        text: textObj,
+        type: 'li'
+      };
+    }
+
+    // Reviews object
+    const reviewsObj = (reviews || []).reduce((acc, review, idx) => {
+      const enComment = review.comment || '-';
+      acc[`user_${idx + 1}`] = {
+        name: review.name,
+        comment: fillLangs({
+          en: review.comment || enComment,
+          'zh-CN': '',
+          'zh-TW': ''
+        }, enComment),
+        rating: Number(review.rating) || 0
+      };
+      return acc;
+    }, {});
+
+    // Tags: remove empty arrays
+    const cleanedTags = {};
+    Object.entries(tags).forEach(([lang, arr]) => {
+      if (Array.isArray(arr) && arr.length > 0) {
+        cleanedTags[lang] = arr;
+      }
+    });
+
+    // Build content array
+    const contentArr = [descContent];
+    if (objectivesContent) contentArr.push(objectivesContent);
+
     return {
-      title: { ...titles },
-      subtitle: { ...subtitles },
-      price: price ? parseFloat(price) : 0,
-      description: { ...descriptions },
-      dropdowns: { ...dropdowns },
-      objectives: { ...objectives },
-      tags: { ...tags },
-      thumbnail: thumbnailKey,
-      preview_video: videoKey,
-      reviews,
+      course_template: {
+        title: fillLangs(titles, '-'),
+        subtitle: fillLangs(subtitles, '-'),
+        price: price ? parseFloat(price) : 0,
+        preview_video: videoKey,
+        thumbnail: thumbnailKey,
+        full_details: {
+          content: contentArr,
+          reviews: reviewsObj,
+          tags: cleanedTags
+        },
+        lessons: {}
+      }
     };
   };
 
@@ -426,9 +529,10 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
               <div className="col-md-6">
                 <label htmlFor="dropdown-en" className="form-label">Select Option</label>
                 <select className="form-control" id="dropdown-en" value={dropdowns['en'] || ''} onChange={e => setDropdowns(prev => ({ ...prev, en: e.target.value }))}>
-                  <option value="">Select an option</option>
-                  <option value="1">Option 1</option>
-                  <option value="2">Option 2</option>
+                  <option value="">{dropdownLoading ? 'Loading...' : dropdownError ? dropdownError : 'Select an option'}</option>
+                  {dropdownOptions && dropdownOptions.length > 0 && dropdownOptions.map(opt => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -441,9 +545,10 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
               <div className="col-md-6">
                 <label htmlFor="dropdown-zh-CN" className="form-label">Select Option</label>
                 <select className="form-control" id="dropdown-zh-CN" value={dropdowns['zh-CN'] || ''} onChange={e => setDropdowns(prev => ({ ...prev, 'zh-CN': e.target.value }))}>
-                  <option value="">Select an option</option>
-                  <option value="1">Option 1</option>
-                  <option value="2">Option 2</option>
+                  <option value="">{dropdownLoading ? 'Loading...' : dropdownError ? dropdownError : 'Select an option'}</option>
+                  {dropdownOptions && dropdownOptions.length > 0 && dropdownOptions.map(opt => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -456,9 +561,10 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
               <div className="col-md-6">
                 <label htmlFor="dropdown-zh-TW" className="form-label">Select Option</label>
                 <select className="form-control" id="dropdown-zh-TW" value={dropdowns['zh-TW'] || ''} onChange={e => setDropdowns(prev => ({ ...prev, 'zh-TW': e.target.value }))}>
-                  <option value="">Select an option</option>
-                  <option value="1">Option 1</option>
-                  <option value="2">Option 2</option>
+                  <option value="">{dropdownLoading ? 'Loading...' : dropdownError ? dropdownError : 'Select an option'}</option>
+                  {dropdownOptions && dropdownOptions.length > 0 && dropdownOptions.map(opt => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
                 </select>
               </div>
             </div>
