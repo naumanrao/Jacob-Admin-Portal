@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const LANGS = [
   { code: 'en', label: 'English' },
@@ -13,7 +14,7 @@ const API_CONFIG = {
 
 function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   // Language tab state for each section
   const [titleLang, setTitleLang] = useState('en');
@@ -59,6 +60,17 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
   const [dropdownOptions, setDropdownOptions] = useState([]);
   const [dropdownLoading, setDropdownLoading] = useState(false);
   const [dropdownError, setDropdownError] = useState('');
+
+  // Add state for courseId
+  const [courseId, setCourseId] = useState(null);
+
+  // Add state for pending uploads
+  const [pendingThumbnailFile, setPendingThumbnailFile] = useState(null);
+  const [pendingVideoFile, setPendingVideoFile] = useState(null);
+
+  // Add state for final submission loading and alert
+  const [finalSubmitLoading, setFinalSubmitLoading] = useState(false);
+  const [finalSubmitAlert, setFinalSubmitAlert] = useState({ message: '', type: '' });
 
   // Fetch dropdown options from API on mount
   useEffect(() => {
@@ -137,8 +149,29 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
     }
   }, [editingCourse]);
 
+  // useEffect to watch for courseId and upload any pending files
+  useEffect(() => {
+    if (courseId && pendingThumbnailFile) {
+      handleAssetUpload(pendingThumbnailFile, 'thumbnail');
+      setPendingThumbnailFile(null);
+    }
+    if (courseId && pendingVideoFile) {
+      handleAssetUpload(pendingVideoFile, 'preview_video');
+      setPendingVideoFile(null);
+    }
+  }, [courseId]);
+
+  // Add useEffect to automatically call handleFinalSubmit after both thumbnailKey and videoKey are set and courseId is available
+  // Remove any useEffect that calls handleFinalSubmit automatically
+
   const handleNext = () => {
-    if (currentStep < totalSteps) setCurrentStep(currentStep + 1);
+    if (currentStep === 4) {
+      handlePublishCourse();
+    } else if (currentStep === 5) {
+      handleFinalSubmit();
+    } else if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1);
+    }
   };
   const handlePrev = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
@@ -175,8 +208,7 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
     try {
       const token = sessionStorage.getItem('authToken');
       if (!token) throw new Error('Not authenticated');
-      // For new course, use 'new' as courseId (backend should handle this or return a temp ID)
-      const courseId = 'test';
+      if (!courseId) throw new Error('Course ID not available. Please publish the course first.');
       const formData = new FormData();
       formData.append(type, file);
       const response = await fetch(API_CONFIG.UPLOAD_URL(courseId), {
@@ -211,10 +243,15 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
       const reader = new FileReader();
       reader.onloadend = () => setThumbnailPreview(reader.result);
       reader.readAsDataURL(file);
-      handleAssetUpload(file, 'thumbnail');
+      if (courseId) {
+        handleAssetUpload(file, 'thumbnail');
+      } else {
+        setPendingThumbnailFile(file);
+      }
     } else {
       setThumbnailPreview(null);
       setThumbnailKey('');
+      setPendingThumbnailFile(null);
     }
   };
   const handleVideoChange = (e) => {
@@ -222,10 +259,15 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
     if (file) {
       const url = URL.createObjectURL(file);
       setVideoPreview(url);
-      handleAssetUpload(file, 'preview_video');
+      if (courseId) {
+        handleAssetUpload(file, 'preview_video');
+      } else {
+        setPendingVideoFile(file);
+      }
     } else {
       setVideoPreview(null);
       setVideoKey('');
+      setPendingVideoFile(null);
     }
   };
 
@@ -340,7 +382,10 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
     try {
       const token = sessionStorage.getItem('authToken');
       if (!token) throw new Error('Not authenticated');
+      // Get the payload and override thumbnail and preview_video with empty strings
       const payload = getCoursePayload();
+      payload.course_template.thumbnail = '';
+      payload.course_template.preview_video = '';
       const response = await fetch(API_CONFIG.PUBLISH_URL, {
         method: 'POST',
         headers: {
@@ -353,7 +398,11 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
         const error = await response.json().catch(() => null);
         throw new Error(error?.message || 'Failed to publish course');
       }
-      setPublishAlert({ message: 'Course published successfully!', type: 'success' });
+      const result = await response.json();
+      // Store course_id and move to upload step
+      setCourseId(result.data?.course_id || result.course_id || null);
+      setPublishAlert({ message: 'Course published successfully! Please upload assets.', type: 'success' });
+      setCurrentStep(5);
       setTimeout(() => setPublishAlert({ message: '', type: '' }), 3000);
     } catch (error) {
       setPublishAlert({ message: error.message || 'Failed to publish course.', type: 'danger' });
@@ -362,8 +411,45 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
     }
   };
 
+  // Add handleFinalSubmit
+  const handleFinalSubmit = async () => {
+    setFinalSubmitLoading(true);
+    setFinalSubmitAlert({ message: '', type: '' });
+    try {
+      const token = sessionStorage.getItem('authToken');
+      if (!token) throw new Error('Not authenticated');
+      if (!courseId) throw new Error('Course ID not available.');
+      const payload = getCoursePayload();
+      payload.course_template.thumbnail = thumbnailKey;
+      payload.course_template.preview_video = videoKey;
+      const response = await fetch(`https://jacobpersonal.onrender.com/admin/api/courses/${courseId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(error?.message || 'Failed to update course');
+      }
+      setFinalSubmitAlert({ message: 'Course updated successfully!', type: 'success' });
+      setTimeout(() => {
+        setFinalSubmitAlert({ message: '', type: '' });
+        navigate('/courses'); // Adjust path if CoursesList is at a different route
+      }, 1500);
+    } catch (error) {
+      setFinalSubmitAlert({ message: error.message || 'Failed to update course.', type: 'danger' });
+    } finally {
+      setFinalSubmitLoading(false);
+    }
+  };
+
   // Progress bar width
   const progressWidth = `${((currentStep - 1) / (totalSteps - 1)) * 100}%`;
+
+  const navigate = useNavigate();
 
   return (
     <div className="page-section active" id="course-creation-section">
@@ -372,7 +458,7 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
         <div className="progress-steps">
           <div className="progress-line"></div>
           <div className="progress-line-active" id="progress-line-active" style={{ width: progressWidth }}></div>
-          {[1, 2, 3, 4].map((step) => (
+          {[1, 2, 3, 4, 5].map((step) => (
             <div
               key={step}
               className={
@@ -390,7 +476,8 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
                 {step === 1 && 'Course Details'}
                 {step === 2 && 'About Course'}
                 {step === 3 && 'Sample Reviews'}
-                {step === 4 && 'Publish Course'}
+                {step === 4 && 'Course Preview'}
+                {step === 5 && 'Upload Assets'}
               </div>
             </div>
           ))}
@@ -479,24 +566,6 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
                     <input type="number" className="form-control" id="price" placeholder="0.00" min="0" step="0.01" value={price || ''} onChange={e => setPrice(e.target.value)} />
                   </div>
                 </div>
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="form-group">
-                <label className="form-label">Course Thumbnail</label>
-                <div className="file-upload-area" onClick={() => thumbnailInputRef.current.click()}>
-                  <div className="file-upload-icon">
-                    <i className="fas fa-cloud-upload-alt"></i>
-                  </div>
-                  <p className="mb-1">Click to upload thumbnail</p>
-                  <small className="text-muted">JPG/PNG up to 5MB</small>
-                </div>
-                <input ref={thumbnailInputRef} type="file" id="thumbnail-upload" accept="image/*" style={{ display: 'none' }} onChange={handleThumbnailChange} />
-                {thumbnailPreview && (
-                  <img src={thumbnailPreview} alt="Thumbnail Preview" className="img-fluid mt-2" style={{ maxHeight: '150px', display: 'block' }} />
-                )}
-                {uploadingAsset === 'thumbnail' && <div className="text-muted mt-2">Uploading...</div>}
-                {uploadError && <div className="text-danger mt-2">{uploadError}</div>}
               </div>
             </div>
           </div>
@@ -751,23 +820,6 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
                 </div>
               </div>
             </div>
-            <div className="col-md-6">
-              <div className="form-group">
-                <label className="form-label">Course Thumbnail Video</label>
-                <div className="file-upload-area" onClick={() => videoInputRef.current.click()}>
-                  <div className="file-upload-icon">
-                    <i className="fas fa-cloud-upload-alt"></i>
-                  </div>
-                  <p className="mb-1">Click to upload video</p>
-                </div>
-                <input ref={videoInputRef} type="file" id="preview-video" accept="video/*" style={{ display: 'none' }} onChange={handleVideoChange} />
-                {videoPreview && (
-                  <video src={videoPreview} controls className="img-fluid mt-2" style={{ maxHeight: '150px', display: 'block' }} />
-                )}
-                {uploadingAsset === 'preview_video' && <div className="text-muted mt-2">Uploading...</div>}
-                {uploadError && <div className="text-danger mt-2">{uploadError}</div>}
-              </div>
-            </div>
           </div>
         </div>
         {/* Step 3: Sample Reviews (dynamic) */}
@@ -826,13 +878,10 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
             </div>
           </div>
         </div>
-        {/* Step 4: Publish Course (show reviews in preview) */}
+        {/* Step 4: Course Preview */}
         <div className={`form-section${currentStep === 4 ? ' active' : ''}`} id="step-4">
           <h2 className="section-title">Course Preview</h2>
-          <p className="section-subtitle">Review before publishing your course.</p>
-          {publishAlert.message && (
-            <div className={`alert alert-${publishAlert.type}`}>{publishAlert.message}</div>
-          )}
+          <p className="section-subtitle">Review your course details before publishing.</p>
           <div className="row">
             <div className="col-md-8">
               <div className="course-preview">
@@ -897,6 +946,48 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
             </div>
           </div>
         </div>
+        {/* Step 5: Upload Assets */}
+        <div className={`form-section${currentStep === 5 ? ' active' : ''}`} id="step-5">
+          <h2 className="section-title">Upload Assets</h2>
+          <p className="section-subtitle">Upload your course thumbnail and preview video.</p>
+          <div className="row">
+            <div className="col-md-6">
+              <div className="form-group">
+                <label className="form-label">Course Thumbnail</label>
+                <div className="file-upload-area" onClick={() => { if (thumbnailInputRef.current) thumbnailInputRef.current.click(); }}>
+                  <div className="file-upload-icon">
+                    <i className="fas fa-cloud-upload-alt"></i>
+                  </div>
+                  <p className="mb-1">Click to upload thumbnail</p>
+                  <small className="text-muted">JPG/PNG up to 5MB</small>
+                </div>
+                <input ref={thumbnailInputRef} type="file" id="thumbnail-upload" accept="image/*" style={{ display: 'none' }} onChange={handleThumbnailChange} />
+                {thumbnailPreview && (
+                  <img src={thumbnailPreview} alt="Thumbnail Preview" className="img-fluid mt-2" style={{ maxHeight: '150px', display: 'block' }} />
+                )}
+                {uploadingAsset === 'thumbnail' && <div className="text-muted mt-2">Uploading...</div>}
+                {uploadError && <div className="text-danger mt-2">{uploadError}</div>}
+              </div>
+            </div>
+            <div className="col-md-6">
+              <div className="form-group">
+                <label className="form-label">Course Preview Video</label>
+                <div className="file-upload-area" onClick={() => { if (videoInputRef.current) videoInputRef.current.click(); }}>
+                  <div className="file-upload-icon">
+                    <i className="fas fa-cloud-upload-alt"></i>
+                  </div>
+                  <p className="mb-1">Click to upload video</p>
+                </div>
+                <input ref={videoInputRef} type="file" id="preview-video" accept="video/*" style={{ display: 'none' }} onChange={handleVideoChange} />
+                {videoPreview && (
+                  <video src={videoPreview} controls className="img-fluid mt-2" style={{ maxHeight: '150px', display: 'block' }} />
+                )}
+                {uploadingAsset === 'preview_video' && <div className="text-muted mt-2">Uploading...</div>}
+                {uploadError && <div className="text-danger mt-2">{uploadError}</div>}
+              </div>
+            </div>
+          </div>
+        </div>
         {/* Navigation Buttons */}
         <div className="wizard-navigation">
           <button
@@ -910,7 +1001,7 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
           <button
             className={currentStep === totalSteps ? 'btn btn-success' : 'btn btn-primary'}
             id="next-btn"
-            onClick={currentStep === totalSteps ? handlePublishCourse : handleNext}
+            onClick={handleNext}
             disabled={publishLoading || uploadingAsset}
           >
             {publishLoading || uploadingAsset ? (
@@ -927,6 +1018,11 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
           </button>
         </div>
       </div>
+      {finalSubmitAlert.message && (
+        <div className={`alert alert-${finalSubmitAlert.type} position-fixed top-0 start-50 translate-middle-x mt-3`} style={{ zIndex: 9999, minWidth: 300 }}>
+          {finalSubmitAlert.message}
+        </div>
+      )}
     </div>
   );
 }
