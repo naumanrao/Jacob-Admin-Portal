@@ -11,6 +11,8 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
   const [expandedLessons, setExpandedLessons] = useState([]); // Track expanded/collapsed state
   const [uploadingVideoIdx, setUploadingVideoIdx] = useState(null); // Track which lesson is uploading
   const [saving, setSaving] = useState(false); // Track if saving lessons
+  // Add state for validation toast
+  const [validationAlert, setValidationAlert] = useState('');
 
   const isViewMode = mode === 'view';
   const isAddMode = mode === 'edit' && lessons.length === 1 && !lessons[0].lesson_key;
@@ -101,7 +103,8 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
         throw new Error(error?.message || 'Failed to upload video');
       }
       const result = await response.json();
-      const videoKey = result.data?.preview_video_key;
+      console.log('Upload asset API response:', result); // Log the full response
+      const videoKey = result.data?.lessons_key;
       if (videoKey) {
         setLessons((prev) =>
           prev.map((lesson, i) => (i === idx ? { ...lesson, videoKey } : lesson))
@@ -126,6 +129,16 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
     if (!course || !course.course_id) {
       alert('Course ID is required to save lessons.');
       return;
+    }
+    // Validation: check each lesson for non-empty title and content in at least one language
+    for (const lesson of lessons) {
+      const hasTitle = Object.values(lesson.title || {}).some(val => val && val.trim());
+      const hasContent = Object.values(lesson.content || {}).some(val => val && val.trim());
+      if (!hasTitle || !hasContent) {
+        setValidationAlert('Title and lesson content are required for each lesson.');
+        setTimeout(() => setValidationAlert(''), 2500);
+        return;
+      }
     }
     const token = sessionStorage.getItem('authToken');
     if (!token) {
@@ -158,10 +171,10 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
           throw new Error(error?.message || 'Failed to save lesson');
         }
       }
-      alert('Lessons saved successfully!');
-      onClose();
-    } catch (error) {
-      alert(error.message || 'Failed to save lessons');
+      onSaveLessons && onSaveLessons();
+      onClose && onClose();
+    } catch (err) {
+      alert(err.message || 'Failed to save lessons');
     } finally {
       setSaving(false);
     }
@@ -406,6 +419,11 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
           </div>
         </div>
       </div>
+      {validationAlert && (
+        <div className="alert alert-danger position-fixed top-0 start-50 translate-middle-x mt-3" style={{ zIndex: 9999, minWidth: 300 }}>
+          {validationAlert}
+        </div>
+      )}
     </div>
   );
 }

@@ -437,7 +437,7 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
       setFinalSubmitAlert({ message: 'Course updated successfully!', type: 'success' });
       setTimeout(() => {
         setFinalSubmitAlert({ message: '', type: '' });
-        navigate('/courses'); // Adjust path if CoursesList is at a different route
+        navigate('/courses-list'); // Redirect to CoursesList
       }, 1500);
     } catch (error) {
       setFinalSubmitAlert({ message: error.message || 'Failed to update course.', type: 'danger' });
@@ -487,8 +487,8 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
       <div className="form-container">
         {/* Step 1: Course Details (thumbnail upload) */}
         <div className={`form-section${currentStep === 1 ? ' active' : ''}`} id="step-1">
-          <h2 className="section-title">Course Details</h2>
-          <p className="section-subtitle">Enter basic information for your course.</p>
+          <h2 className="section-title">Basic Details</h2>
+          <p className="section-subtitle">Enter the basic details for your course.</p>
           <div className="row">
             <div className="col-md-8">
               <div className="form-group">

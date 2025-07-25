@@ -15,7 +15,7 @@ function Sidebar({ activeSection, onSectionChange }) {
           id="menu-publish"
           onClick={() => onSectionChange('courses')}
         >
-          <i className="fas fa-book-open"></i> Publish Courses
+          <i className="fas fa-book-open"></i> Add Course
         </button>
         <button
           className={`menu-item${activeSection === 'courses-list' ? ' active' : ''}`}
