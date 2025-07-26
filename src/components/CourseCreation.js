@@ -50,7 +50,8 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
   const [reviews, setReviews] = useState([]);
   const [reviewName, setReviewName] = useState('');
   const [reviewRating, setReviewRating] = useState('5');
-  const [reviewComment, setReviewComment] = useState('');
+  const [reviewComment, setReviewComment] = useState({ en: '', 'zh-CN': '', 'zh-TW': '' });
+  const [reviewCommentLang, setReviewCommentLang] = useState('en');
 
   // Add API state
   const [publishLoading, setPublishLoading] = useState(false);
@@ -71,6 +72,9 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
   // Add state for final submission loading and alert
   const [finalSubmitLoading, setFinalSubmitLoading] = useState(false);
   const [finalSubmitAlert, setFinalSubmitAlert] = useState({ message: '', type: '' });
+
+  // Add state for validation alerts
+  const [validationAlert, setValidationAlert] = useState({ message: '', type: '' });
 
   // Fetch dropdown options from API on mount
   useEffect(() => {
@@ -165,6 +169,21 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
   // Remove any useEffect that calls handleFinalSubmit automatically
 
   const handleNext = () => {
+    // Validation for Step 1: Title and Subtitle are required
+    if (currentStep === 1) {
+      const hasTitle = Object.values(titles).some(val => val && val.trim());
+      const hasSubtitle = Object.values(subtitles).some(val => val && val.trim());
+      
+      if (!hasTitle || !hasSubtitle) {
+        setValidationAlert({
+          message: 'Title and Subtitle are required in at least one language.',
+          type: 'danger'
+        });
+        setTimeout(() => setValidationAlert({ message: '', type: '' }), 3000);
+        return;
+      }
+    }
+    
     if (currentStep === 4) {
       handlePublishCourse();
     } else if (currentStep === 5) {
@@ -273,14 +292,14 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
 
   // Reviews handlers
   const addReview = () => {
-    if (reviewName.trim() && reviewComment.trim()) {
+    if (reviewName.trim() && Object.values(reviewComment).some(val => val && val.trim())) {
       setReviews((prev) => [
         ...prev,
-        { name: reviewName, rating: reviewRating, comment: reviewComment }
+        { name: reviewName, rating: reviewRating, comment: { ...reviewComment } }
       ]);
       setReviewName('');
       setReviewRating('5');
-      setReviewComment('');
+      setReviewComment({ en: '', 'zh-CN': '', 'zh-TW': '' });
     }
   };
   const removeReview = (idx) => {
@@ -292,11 +311,10 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
     const LANGS = ['en', 'zh-CN', 'zh-TW'];
     // Helper to fill missing language fields
     const fillLangs = (obj, fallback = '-') => {
-      const enVal = obj.en || fallback;
       return {
-        en: obj.en || enVal,
-        'zh-CN': obj['zh-CN'] || enVal,
-        'zh-TW': obj['zh-TW'] || enVal
+        en: obj.en || fallback,
+        'zh-CN': obj['zh-CN'] || '',
+        'zh-TW': obj['zh-TW'] || ''
       };
     };
 
@@ -304,10 +322,10 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
     const descContent = {
       text: fillLangs({
         en: descriptions.en || '-',
-        'zh-CN': descriptions['zh-CN'] || '-',
-        'zh-TW': descriptions['zh-TW'] || '-'
+        'zh-CN': descriptions['zh-CN'] || '',
+        'zh-TW': descriptions['zh-TW'] || ''
       }),
-      type: dropdowns['en'] || 'p'
+      type: dropdowns['en'] ? dropdowns['en'] : ''
     };
 
     // Objectives block
@@ -317,13 +335,11 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
       let textObj = {};
       const maxObjectives = Math.max(...LANGS.map(lang => (objectives[lang] || []).length));
       for (let i = 0; i < maxObjectives; i++) {
-        // For each objective, fill missing languages with English or '-'
-        const enVal = objectives.en[i] || '-';
         textObj[`li${i + 1}`] = fillLangs({
-          en: objectives.en[i] || enVal,
-          'zh-CN': objectives['zh-CN'][i] || enVal,
-          'zh-TW': objectives['zh-TW'][i] || enVal
-        }, enVal);
+          en: objectives.en[i] || '-',
+          'zh-CN': objectives['zh-CN'][i] || '',
+          'zh-TW': objectives['zh-TW'][i] || ''
+        }, objectives.en[i] || '-');
       }
       objectivesContent = {
         text: textObj,
@@ -333,14 +349,13 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
 
     // Reviews object
     const reviewsObj = (reviews || []).reduce((acc, review, idx) => {
-      const enComment = review.comment || '-';
       acc[`user_${idx + 1}`] = {
         name: review.name,
         comment: fillLangs({
-          en: review.comment || enComment,
+          en: review.comment || '-',
           'zh-CN': '',
           'zh-TW': ''
-        }, enComment),
+        }, review.comment || '-'),
         rating: Number(review.rating) || 0
       };
       return acc;
@@ -360,8 +375,16 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
 
     return {
       course_template: {
-        title: fillLangs(titles, '-'),
-        subtitle: fillLangs(subtitles, '-'),
+        title: fillLangs({
+          en: titles.en || '-',
+          'zh-CN': titles['zh-CN'] || '',
+          'zh-TW': titles['zh-TW'] || ''
+        }, '-'),
+        subtitle: fillLangs({
+          en: subtitles.en || '-',
+          'zh-CN': subtitles['zh-CN'] || '',
+          'zh-TW': subtitles['zh-TW'] || ''
+        }, '-'),
         price: price ? parseFloat(price) : 0,
         preview_video: videoKey,
         thumbnail: thumbnailKey,
@@ -847,12 +870,29 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
                 <option value="2">2 Stars</option>
                 <option value="1">1 Star</option>
               </select>
-              <textarea
-                className="form-control mb-2"
-                placeholder="Review Comment"
-                value={reviewComment || ''}
-                onChange={e => setReviewComment(e.target.value)}
-              ></textarea>
+              <div className="language-tabs mb-2">
+                {LANGS.map((lang) => (
+                  <button
+                    key={lang.code}
+                    className={`lang-tab${reviewCommentLang === lang.code ? ' active' : ''}`}
+                    data-lang={lang.code}
+                    type="button"
+                    onClick={() => setReviewCommentLang(lang.code)}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+              {LANGS.map((lang) => (
+                <textarea
+                  key={lang.code}
+                  className="form-control mb-2"
+                  placeholder={`Review Comment${lang.code === 'en' ? '' : lang.code === 'zh-CN' ? '（简体中文）' : '（繁體中文）'}`}
+                  style={{ display: reviewCommentLang === lang.code ? 'block' : 'none' }}
+                  value={reviewComment[lang.code] || ''}
+                  onChange={e => setReviewComment(prev => ({ ...prev, [lang.code]: e.target.value }))}
+                ></textarea>
+              ))}
               <button className="btn btn-primary" type="button" onClick={addReview}>
                 <i className="fas fa-plus me-2"></i>Add Review
               </button>
@@ -870,7 +910,9 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
                   <div className="lesson-content" style={{ display: 'block' }}>
                     <div className="form-group">
                       <label className="form-label">Review Comment</label>
-                      <p>{review.comment}</p>
+                      {LANGS.map(lang => review.comment && review.comment[lang.code] && (
+                        <p key={lang.code}><strong>{lang.label}:</strong> {review.comment[lang.code]}</p>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -917,7 +959,9 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
                   {reviews.map((review, idx) => (
                     <div key={idx} className="mb-2">
                       <strong>{review.name}</strong> ({review.rating} Stars):<br />
-                      <span>{review.comment}</span>
+                      {LANGS.map(lang => review.comment && review.comment[lang.code] && (
+                        <span key={lang.code}><strong>{lang.label}:</strong> {review.comment[lang.code]}<br /></span>
+                      ))}
                     </div>
                   ))}
                 </div>
@@ -1021,6 +1065,11 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
       {finalSubmitAlert.message && (
         <div className={`alert alert-${finalSubmitAlert.type} position-fixed top-0 start-50 translate-middle-x mt-3`} style={{ zIndex: 9999, minWidth: 300 }}>
           {finalSubmitAlert.message}
+        </div>
+      )}
+      {validationAlert.message && (
+        <div className={`alert alert-${validationAlert.type} position-fixed top-0 start-50 translate-middle-x mt-3`} style={{ zIndex: 9999, minWidth: 300 }}>
+          {validationAlert.message}
         </div>
       )}
     </div>

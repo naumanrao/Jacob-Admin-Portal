@@ -46,8 +46,13 @@ function MainApp({ darkMode, setDarkMode }) {
   const [activeSection, setActiveSection] = useState(getInitialSection());
   // Sync activeSection with the current route
   useEffect(() => {
-    if (location.pathname.startsWith('/courses-list')) setActiveSection('courses-list');
-    else if (location.pathname.startsWith('/courses')) setActiveSection('courses');
+    if (location.pathname.startsWith('/courses-list')) {
+      setActiveSection('courses-list');
+    } else if (location.pathname.startsWith('/courses/') && location.pathname.includes('/lessons')) {
+      setActiveSection('courses-list');
+    } else if (location.pathname.startsWith('/courses')) {
+      setActiveSection('courses');
+    }
   }, [location.pathname]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);

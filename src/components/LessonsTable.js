@@ -9,6 +9,7 @@ const ShimmerTable = () => (
     <table className="table table-striped align-middle">
       <thead>
         <tr>
+          <th>Order</th>
           <th>Title</th>
           <th>Video Duration</th>
           <th>Free?</th>
@@ -18,6 +19,7 @@ const ShimmerTable = () => (
       <tbody>
         {Array.from({ length: shimmerRows }).map((_, idx) => (
           <tr key={idx}>
+            <td><div className="shimmer shimmer-cell" /></td>
             <td><div className="shimmer shimmer-cell" /></td>
             <td><div className="shimmer shimmer-cell" /></td>
             <td><div className="shimmer shimmer-cell" /></td>
@@ -40,6 +42,28 @@ const LessonsTable = ({ darkMode, setDarkMode }) => {
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState(null);
+
+  // Function to fetch lessons data
+  const fetchLessons = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = sessionStorage.getItem('authToken');
+      if (!token) throw new Error('Not authenticated');
+      const response = await fetch(`https://jacobpersonal.onrender.com/admin/api/courses/${courseId}/lessons`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch lessons');
+      const data = await response.json();
+      setLessons(data.data || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Open modal and fetch lesson data
   const openLessonModal = (lesson, mode) => {
@@ -109,29 +133,12 @@ const LessonsTable = ({ darkMode, setDarkMode }) => {
     setModalOpen(false);
     setSelectedLesson(null);
     setModalError(null);
+    fetchLessons(); // Refresh lessons data after modal closes
   };
 
+  // Fetch lessons on component mount
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    const token = sessionStorage.getItem('authToken');
-    fetch(`https://jacobpersonal.onrender.com/admin/api/courses/${courseId}/lessons`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch lessons');
-        return res.json();
-      })
-      .then((data) => {
-        setLessons(data.data || []);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+    fetchLessons();
   }, [courseId]);
 
   return (
@@ -152,6 +159,29 @@ const LessonsTable = ({ darkMode, setDarkMode }) => {
         @keyframes shimmer {
           0% { background-position: -400px 0; }
           100% { background-position: 400px 0; }
+        }
+        .table {
+          border: 1px solid #dee2e6;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .table th {
+          border-bottom: 2px solid #dee2e6;
+          background-color: #f8f9fa;
+          font-weight: 600;
+          padding: 12px 16px;
+        }
+        .table td {
+          border-bottom: 1px solid #dee2e6;
+          padding: 12px 16px;
+          vertical-align: middle;
+        }
+        .table tbody tr:last-child td {
+          border-bottom: none;
+        }
+        .table tbody tr:hover {
+          background-color: #f8f9fa;
         }
       `}</style>
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -184,6 +214,7 @@ const LessonsTable = ({ darkMode, setDarkMode }) => {
             <table className="table table-striped align-middle">
               <thead>
                 <tr>
+                  <th>Order</th>
                   <th>Title</th>
                   <th>Video Duration</th>
                   <th>Free?</th>
@@ -193,6 +224,7 @@ const LessonsTable = ({ darkMode, setDarkMode }) => {
               <tbody>
                 {lessons.map((lesson) => (
                   <tr key={lesson.lesson_key}>
+                    <td>{lesson.order_num}</td>
                     <td>{lesson.title}</td>
                     <td>{lesson.video_duration}</td>
                     <td>{lesson.is_free ? 'Yes' : 'No'}</td>

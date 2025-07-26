@@ -13,6 +13,7 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
   const [saving, setSaving] = useState(false); // Track if saving lessons
   // Add state for validation toast
   const [validationAlert, setValidationAlert] = useState('');
+  const [successAlert, setSuccessAlert] = useState('');
 
   const isViewMode = mode === 'view';
   const isAddMode = mode === 'edit' && lessons.length === 1 && !lessons[0].lesson_key;
@@ -154,9 +155,9 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
         const lessonData = {
           title: lesson.title,
           content: lesson.content,
-          video_duration: lesson.duration,
+          video_duration: typeof lesson.duration === 'string' ? lesson.duration : (lesson.duration ? String(lesson.duration) : ''),
           video_url,
-          is_free: lesson.isFree,
+          is_free: typeof lesson.isFree === 'boolean' ? lesson.isFree : false,
         };
         const response = await fetch(`https://jacobpersonal.onrender.com/admin/api/courses/${course.course_id}/lessons`, {
           method: 'POST',
@@ -172,7 +173,11 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
         }
       }
       onSaveLessons && onSaveLessons();
-      onClose && onClose();
+      setSuccessAlert('Lesson saved successfully!');
+      setTimeout(() => {
+        setSuccessAlert('');
+        onClose && onClose();
+      }, 1500);
     } catch (err) {
       alert(err.message || 'Failed to save lessons');
     } finally {
@@ -419,9 +424,16 @@ function LessonsModal({ show, onClose, course, lessons: initialLessons, onSaveLe
           </div>
         </div>
       </div>
+      {/* Display validation alert */}
       {validationAlert && (
         <div className="alert alert-danger position-fixed top-0 start-50 translate-middle-x mt-3" style={{ zIndex: 9999, minWidth: 300 }}>
           {validationAlert}
+        </div>
+      )}
+      {/* Display success alert */}
+      {successAlert && (
+        <div className="alert alert-success position-fixed top-0 start-50 translate-middle-x mt-3" style={{ zIndex: 9999, minWidth: 300 }}>
+          {successAlert}
         </div>
       )}
     </div>
