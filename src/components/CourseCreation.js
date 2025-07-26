@@ -105,53 +105,161 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
   // Load editingCourse data into form
   useEffect(() => {
     if (editingCourse) {
-      setTitles({
-        en: typeof editingCourse.title === 'object' ? (editingCourse.title.en || '') : (editingCourse.title || ''),
-        'zh-CN': typeof editingCourse.title === 'object' ? (editingCourse.title['zh-CN'] || '') : '',
-        'zh-TW': typeof editingCourse.title === 'object' ? (editingCourse.title['zh-TW'] || '') : '',
-      });
-      setSubtitles({
-        en: typeof editingCourse.subtitle === 'object' ? (editingCourse.subtitle.en || '') : (editingCourse.subtitle || ''),
-        'zh-CN': typeof editingCourse.subtitle === 'object' ? (editingCourse.subtitle['zh-CN'] || '') : '',
-        'zh-TW': typeof editingCourse.subtitle === 'object' ? (editingCourse.subtitle['zh-TW'] || '') : '',
-      });
-      setDescriptions({
-        en: typeof editingCourse.description === 'object' ? (editingCourse.description.en || '') : (editingCourse.description || ''),
-        'zh-CN': typeof editingCourse.description === 'object' ? (editingCourse.description['zh-CN'] || '') : '',
-        'zh-TW': typeof editingCourse.description === 'object' ? (editingCourse.description['zh-TW'] || '') : '',
-      });
-      setDropdowns({
-        en: typeof editingCourse.dropdowns === 'object' ? (editingCourse.dropdowns.en || '') : (editingCourse.dropdowns || ''),
-        'zh-CN': typeof editingCourse.dropdowns === 'object' ? (editingCourse.dropdowns['zh-CN'] || '') : '',
-        'zh-TW': typeof editingCourse.dropdowns === 'object' ? (editingCourse.dropdowns['zh-TW'] || '') : '',
-      });
-      setPrice(editingCourse.price ? String(editingCourse.price) : '');
-      setObjectives(editingCourse.objectives || { en: [], 'zh-CN': [], 'zh-TW': [] });
-      setTags(editingCourse.tags || { en: [], 'zh-CN': [], 'zh-TW': [] });
-      setThumbnailKey(editingCourse.thumbnail || '');
-      setVideoKey(editingCourse.preview_video || '');
-      setReviews(editingCourse.reviews || []);
-      // Optionally, set preview images if you have URLs
-      setThumbnailPreview(null); // You can set a URL if available
-      setVideoPreview(null); // You can set a URL if available
-      setCurrentStep(1);
+      // If editingCourse has course_id, fetch the full course data from API
+      if (editingCourse.course_id) {
+        const fetchCourseData = async () => {
+          try {
+            const token = sessionStorage.getItem('authToken');
+            if (!token) throw new Error('Not authenticated');
+            
+            const response = await fetch(`https://jacobpersonal.onrender.com/admin/api/courses/${editingCourse.course_id}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            });
+            
+            if (!response.ok) {
+              throw new Error('Failed to fetch course data');
+            }
+            
+            const data = await response.json();
+            const courseData = data.data?.course_template || data.data || {};
+            
+            // Populate form with fetched data
+            setTitles({
+              en: courseData.title?.en || '',
+              'zh-CN': courseData.title?.['zh-CN'] || '',
+              'zh-TW': courseData.title?.['zh-TW'] || '',
+            });
+            setSubtitles({
+              en: courseData.subtitle?.en || '',
+              'zh-CN': courseData.subtitle?.['zh-CN'] || '',
+              'zh-TW': courseData.subtitle?.['zh-TW'] || '',
+            });
+            setPrice(courseData.price ? String(courseData.price) : '');
+            setThumbnailKey(courseData.thumbnail || '');
+            setVideoKey(courseData.preview_video || '');
+            
+            // Handle full_details
+            if (courseData.full_details) {
+              // Handle content (description and objectives)
+              if (courseData.full_details.content && Array.isArray(courseData.full_details.content)) {
+                const content = courseData.full_details.content;
+                let descriptionContent = content.find(item => item.type !== 'li');
+                let objectivesContent = content.find(item => item.type === 'li');
+                
+                if (descriptionContent) {
+                  setDescriptions({
+                    en: descriptionContent.text?.en || '',
+                    'zh-CN': descriptionContent.text?.['zh-CN'] || '',
+                    'zh-TW': descriptionContent.text?.['zh-TW'] || '',
+                  });
+                  setDropdowns({
+                    en: descriptionContent.type || '',
+                    'zh-CN': descriptionContent.type || '',
+                    'zh-TW': descriptionContent.type || '',
+                  });
+                }
+                
+                if (objectivesContent && objectivesContent.text) {
+                  const objectives = { en: [], 'zh-CN': [], 'zh-TW': [] };
+                  Object.keys(objectivesContent.text).forEach(key => {
+                    if (key.startsWith('li')) {
+                      const obj = objectivesContent.text[key];
+                      if (obj?.en) objectives.en.push(obj.en);
+                      if (obj?.['zh-CN']) objectives['zh-CN'].push(obj['zh-CN']);
+                      if (obj?.['zh-TW']) objectives['zh-TW'].push(obj['zh-TW']);
+                    }
+                  });
+                  setObjectives(objectives);
+                }
+              }
+              
+              // Handle reviews
+              if (courseData.full_details.reviews) {
+                const reviewsArray = Object.values(courseData.full_details.reviews).map(review => ({
+                  name: review.name || '',
+                  rating: review.rating ? String(review.rating) : '5',
+                  comment: review.comment || '',
+                }));
+                setReviews(reviewsArray);
+              }
+              
+              // Handle tags
+              if (courseData.full_details.tags) {
+                setTags(courseData.full_details.tags);
+              }
+            }
+            
+            setCurrentStep(1);
+          } catch (error) {
+            console.error('Error fetching course data:', error);
+            // Fallback to using editingCourse data directly
+            populateFormWithEditingCourse(editingCourse);
+          }
+        };
+        
+        fetchCourseData();
+      } else {
+        // Use editingCourse data directly if no course_id
+        populateFormWithEditingCourse(editingCourse);
+      }
     } else {
       // Reset form for new course
-      setTitles({ en: '', 'zh-CN': '', 'zh-TW': '' });
-      setSubtitles({ en: '', 'zh-CN': '', 'zh-TW': '' });
-      setDescriptions({ en: '', 'zh-CN': '', 'zh-TW': '' });
-      setDropdowns({ en: '', 'zh-CN': '', 'zh-TW': '' });
-      setPrice('');
-      setObjectives({ en: [], 'zh-CN': [], 'zh-TW': [] });
-      setTags({ en: [], 'zh-CN': [], 'zh-TW': [] });
-      setThumbnailKey('');
-      setVideoKey('');
-      setReviews([]);
-      setThumbnailPreview(null);
-      setVideoPreview(null);
-      setCurrentStep(1);
+      resetForm();
     }
   }, [editingCourse]);
+
+  // Helper function to populate form with editingCourse data
+  const populateFormWithEditingCourse = (course) => {
+    setTitles({
+      en: typeof course.title === 'object' ? (course.title.en || '') : (course.title || ''),
+      'zh-CN': typeof course.title === 'object' ? (course.title['zh-CN'] || '') : '',
+      'zh-TW': typeof course.title === 'object' ? (course.title['zh-TW'] || '') : '',
+    });
+    setSubtitles({
+      en: typeof course.subtitle === 'object' ? (course.subtitle.en || '') : (course.subtitle || ''),
+      'zh-CN': typeof course.subtitle === 'object' ? (course.subtitle['zh-CN'] || '') : '',
+      'zh-TW': typeof course.subtitle === 'object' ? (course.subtitle['zh-TW'] || '') : '',
+    });
+    setDescriptions({
+      en: typeof course.description === 'object' ? (course.description.en || '') : (course.description || ''),
+      'zh-CN': typeof course.description === 'object' ? (course.description['zh-CN'] || '') : '',
+      'zh-TW': typeof course.description === 'object' ? (course.description['zh-TW'] || '') : '',
+    });
+    setDropdowns({
+      en: typeof course.dropdowns === 'object' ? (course.dropdowns.en || '') : (course.dropdowns || ''),
+      'zh-CN': typeof course.dropdowns === 'object' ? (course.dropdowns['zh-CN'] || '') : '',
+      'zh-TW': typeof course.dropdowns === 'object' ? (course.dropdowns['zh-TW'] || '') : '',
+    });
+    setPrice(course.price ? String(course.price) : '');
+    setObjectives(course.objectives || { en: [], 'zh-CN': [], 'zh-TW': [] });
+    setTags(course.tags || { en: [], 'zh-CN': [], 'zh-TW': [] });
+    setThumbnailKey(course.thumbnail || '');
+    setVideoKey(course.preview_video || '');
+    setReviews(course.reviews || []);
+    setThumbnailPreview(null);
+    setVideoPreview(null);
+    setCurrentStep(1);
+  };
+
+  // Helper function to reset form
+  const resetForm = () => {
+    setTitles({ en: '', 'zh-CN': '', 'zh-TW': '' });
+    setSubtitles({ en: '', 'zh-CN': '', 'zh-TW': '' });
+    setDescriptions({ en: '', 'zh-CN': '', 'zh-TW': '' });
+    setDropdowns({ en: '', 'zh-CN': '', 'zh-TW': '' });
+    setPrice('');
+    setObjectives({ en: [], 'zh-CN': [], 'zh-TW': [] });
+    setTags({ en: [], 'zh-CN': [], 'zh-TW': [] });
+    setThumbnailKey('');
+    setVideoKey('');
+    setReviews([]);
+    setThumbnailPreview(null);
+    setVideoPreview(null);
+    setCurrentStep(1);
+  };
 
   // useEffect to watch for courseId and upload any pending files
   useEffect(() => {
@@ -169,14 +277,13 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
   // Remove any useEffect that calls handleFinalSubmit automatically
 
   const handleNext = () => {
-    // Validation for Step 1: Title and Subtitle are required
+    // Validation for Step 1: Title is required
     if (currentStep === 1) {
       const hasTitle = Object.values(titles).some(val => val && val.trim());
-      const hasSubtitle = Object.values(subtitles).some(val => val && val.trim());
       
-      if (!hasTitle || !hasSubtitle) {
+      if (!hasTitle) {
         setValidationAlert({
-          message: 'Title and Subtitle are required in at least one language.',
+          message: 'Title is required in at least one language.',
           type: 'danger'
         });
         setTimeout(() => setValidationAlert({ message: '', type: '' }), 3000);
@@ -185,7 +292,13 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
     }
     
     if (currentStep === 4) {
-      handlePublishCourse();
+      // If editing a course, skip POST API call and go directly to step 5
+      if (editingCourse && editingCourse.course_id) {
+        setCurrentStep(5);
+      } else {
+        // For new course creation, call the POST API
+        handlePublishCourse();
+      }
     } else if (currentStep === 5) {
       handleFinalSubmit();
     } else if (currentStep < totalSteps) {
@@ -351,11 +464,7 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
     const reviewsObj = (reviews || []).reduce((acc, review, idx) => {
       acc[`user_${idx + 1}`] = {
         name: review.name,
-        comment: fillLangs({
-          en: review.comment || '-',
-          'zh-CN': '',
-          'zh-TW': ''
-        }, review.comment || '-'),
+        comment: review.comment || { en: '', 'zh-CN': '', 'zh-TW': '' },
         rating: Number(review.rating) || 0
       };
       return acc;
@@ -441,11 +550,16 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
     try {
       const token = sessionStorage.getItem('authToken');
       if (!token) throw new Error('Not authenticated');
-      if (!courseId) throw new Error('Course ID not available.');
+      
+      // Determine which course ID to use
+      const targetCourseId = editingCourse && editingCourse.course_id ? editingCourse.course_id : courseId;
+      if (!targetCourseId) throw new Error('Course ID not available.');
+      
       const payload = getCoursePayload();
       payload.course_template.thumbnail = thumbnailKey;
       payload.course_template.preview_video = videoKey;
-      const response = await fetch(`https://jacobpersonal.onrender.com/admin/api/courses/${courseId}`, {
+      
+      const response = await fetch(`https://jacobpersonal.onrender.com/admin/api/courses/${targetCourseId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -453,10 +567,12 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
         },
         body: JSON.stringify(payload),
       });
+      
       if (!response.ok) {
         const error = await response.json().catch(() => null);
         throw new Error(error?.message || 'Failed to update course');
       }
+      
       setFinalSubmitAlert({ message: 'Course updated successfully!', type: 'success' });
       setTimeout(() => {
         setFinalSubmitAlert({ message: '', type: '' });
@@ -496,7 +612,7 @@ function CourseCreation({ editingCourse, darkMode, setDarkMode }) {
             >
               <div className="step-circle">{step}</div>
               <div className="step-label">
-                {step === 1 && 'Course Details'}
+                {step === 1 && 'Basic Details'}
                 {step === 2 && 'About Course'}
                 {step === 3 && 'Sample Reviews'}
                 {step === 4 && 'Course Preview'}
